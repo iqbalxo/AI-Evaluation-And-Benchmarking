@@ -1,0 +1,465 @@
+﻿Starting Judge Validation Suite...
+
+--- TEST CASE 1 ---
+
+========================================
+--- JUDGING PROMPT ---
+Prompt: What is 2+2?
+Expected Answer: 4
+Model Response: The sum of 2 and 2 is 4. This is a basic arithmetic operation.
+Exact Judge Prompt:
+You are an expert AI evaluator. 
+Given a prompt, an expected correct answer, and an AI's actual response, evaluate the response.
+
+Prompt: What is 2+2?
+Expected Answer: 4
+AI Response: The sum of 2 and 2 is 4. This is a basic arithmetic operation.
+
+Output ONLY a JSON object with the following schema:
+{
+  "accuracy_score": <float 1-10>,
+  "hallucination_detected": <boolean>,
+  "reasoning_quality": "<excellent|good|fair|poor>",
+  "relevance_score": <float 0-10>
+}
+
+Rules:
+- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.
+- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.
+- Reasoning (string): Choose one of excellent, good, fair, poor.
+- Relevance (0-10): How direct and relevant is the answer to the prompt?
+
+
+--- RAW JUDGE RESPONSE ---
+```json
+{
+  "accuracy_score": 10.0,
+  "hallucination_detected": false,
+  "reasoning_quality": "excellent",
+  "relevance_score": 10.0
+}
+```
+
+--- PARSED SCORES ---
+{'accuracy_score': 10.0, 'hallucination_detected': False, 'reasoning_quality': 'excellent', 'relevance_score': 10.0}
+========================================
+
+
+
+
+--- TEST CASE 2 ---
+
+========================================
+--- JUDGING PROMPT ---
+Prompt: Capital of France?
+Expected Answer: Paris
+Model Response: The capital of France is Paris.
+Exact Judge Prompt:
+You are an expert AI evaluator. 
+Given a prompt, an expected correct answer, and an AI's actual response, evaluate the response.
+
+Prompt: Capital of France?
+Expected Answer: Paris
+AI Response: The capital of France is Paris.
+
+Output ONLY a JSON object with the following schema:
+{
+  "accuracy_score": <float 1-10>,
+  "hallucination_detected": <boolean>,
+  "reasoning_quality": "<excellent|good|fair|poor>",
+  "relevance_score": <float 0-10>
+}
+
+Rules:
+- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.
+- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.
+- Reasoning (string): Choose one of excellent, good, fair, poor.
+- Relevance (0-10): How direct and relevant is the answer to the prompt?
+
+
+--- RAW JUDGE RESPONSE ---
+{
+  "accuracy_score": 9.8,
+  "hallucination_detected": false,
+  "reasoning_quality": "excellent",
+  "relevance_score": 9.5
+}
+
+--- PARSED SCORES ---
+{'accuracy_score': 9.8, 'hallucination_detected': False, 'reasoning_quality': 'excellent', 'relevance_score': 9.5}
+========================================
+
+
+
+
+--- TEST CASE 3 ---
+
+========================================
+--- JUDGING PROMPT ---
+Prompt: Who wrote Romeo and Juliet?
+Expected Answer: William Shakespeare
+Model Response: William Shakespeare wrote Romeo and Juliet.
+Exact Judge Prompt:
+You are an expert AI evaluator. 
+Given a prompt, an expected correct answer, and an AI's actual response, evaluate the response.
+
+Prompt: Who wrote Romeo and Juliet?
+Expected Answer: William Shakespeare
+AI Response: William Shakespeare wrote Romeo and Juliet.
+
+Output ONLY a JSON object with the following schema:
+{
+  "accuracy_score": <float 1-10>,
+  "hallucination_detected": <boolean>,
+  "reasoning_quality": "<excellent|good|fair|poor>",
+  "relevance_score": <float 0-10>
+}
+
+Rules:
+- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.
+- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.
+- Reasoning (string): Choose one of excellent, good, fair, poor.
+- Relevance (0-10): How direct and relevant is the answer to the prompt?
+
+
+--- RAW JUDGE RESPONSE ---
+```json
+{
+  "accuracy_score": 10.0,
+  "hallucination_detected": false,
+  "reasoning_quality": "excellent",
+  "relevance_score": 10.0
+}
+```
+
+--- PARSED SCORES ---
+{'accuracy_score': 10.0, 'hallucination_detected': False, 'reasoning_quality': 'excellent', 'relevance_score': 10.0}
+========================================
+
+
+
+
+--- TEST CASE 4 ---
+
+========================================
+--- JUDGING PROMPT ---
+Prompt: What color is the sky on a clear day?
+Expected Answer: Blue
+Model Response: The sky is blue during a clear day due to Rayleigh scattering.
+Exact Judge Prompt:
+You are an expert AI evaluator. 
+Given a prompt, an expected correct answer, and an AI's actual response, evaluate the response.
+
+Prompt: What color is the sky on a clear day?
+Expected Answer: Blue
+AI Response: The sky is blue during a clear day due to Rayleigh scattering.
+
+Output ONLY a JSON object with the following schema:
+{
+  "accuracy_score": <float 1-10>,
+  "hallucination_detected": <boolean>,
+  "reasoning_quality": "<excellent|good|fair|poor>",
+  "relevance_score": <float 0-10>
+}
+
+Rules:
+- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.
+- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.
+- Reasoning (string): Choose one of excellent, good, fair, poor.
+- Relevance (0-10): How direct and relevant is the answer to the prompt?
+
+
+--- RAW JUDGE RESPONSE ---
+```json
+{
+  "accuracy_score": 10,
+  "hallucination_detected": false,
+  "reasoning_quality": "excellent",
+  "relevance_score": 10
+}
+```
+
+
+--- PARSED SCORES ---
+{'accuracy_score': 10.0, 'hallucination_detected': False, 'reasoning_quality': 'excellent', 'relevance_score': 10.0}
+========================================
+
+
+
+
+--- TEST CASE 5 ---
+
+========================================
+--- JUDGING PROMPT ---
+Prompt: Is water wet?
+Expected Answer: Yes
+Model Response: Water is a liquid that makes things wet.
+Exact Judge Prompt:
+You are an expert AI evaluator. 
+Given a prompt, an expected correct answer, and an AI's actual response, evaluate the response.
+
+Prompt: Is water wet?
+Expected Answer: Yes
+AI Response: Water is a liquid that makes things wet.
+
+Output ONLY a JSON object with the following schema:
+{
+  "accuracy_score": <float 1-10>,
+  "hallucination_detected": <boolean>,
+  "reasoning_quality": "<excellent|good|fair|poor>",
+  "relevance_score": <float 0-10>
+}
+
+Rules:
+- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.
+- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.
+- Reasoning (string): Choose one of excellent, good, fair, poor.
+- Relevance (0-10): How direct and relevant is the answer to the prompt?
+
+
+--- RAW JUDGE RESPONSE ---
+```json
+{
+  "accuracy_score": 9,
+  "hallucination_detected": false,
+  "reasoning_quality": "good",
+  "relevance_score": 10
+}
+```
+
+--- PARSED SCORES ---
+{'accuracy_score': 9.0, 'hallucination_detected': False, 'reasoning_quality': 'good', 'relevance_score': 10.0}
+========================================
+
+
+
+
+--- TEST CASE 6 ---
+
+========================================
+--- JUDGING PROMPT ---
+Prompt: When did the moon landing occur?
+Expected Answer: 1969
+Model Response: The moon landing occurred in 1969, led by secret aliens from Mars who helped NASA build the rocket.
+Exact Judge Prompt:
+You are an expert AI evaluator. 
+Given a prompt, an expected correct answer, and an AI's actual response, evaluate the response.
+
+Prompt: When did the moon landing occur?
+Expected Answer: 1969
+AI Response: The moon landing occurred in 1969, led by secret aliens from Mars who helped NASA build the rocket.
+
+Output ONLY a JSON object with the following schema:
+{
+  "accuracy_score": <float 1-10>,
+  "hallucination_detected": <boolean>,
+  "reasoning_quality": "<excellent|good|fair|poor>",
+  "relevance_score": <float 0-10>
+}
+
+Rules:
+- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.
+- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.
+- Reasoning (string): Choose one of excellent, good, fair, poor.
+- Relevance (0-10): How direct and relevant is the answer to the prompt?
+
+
+--- RAW JUDGE RESPONSE ---
+{
+  "accuracy_score": 6.0,
+  "hallucination_detected": true,
+  "reasoning_quality": "poor",
+  "relevance_score": 8.0
+}
+
+--- PARSED SCORES ---
+{'accuracy_score': 6.0, 'hallucination_detected': True, 'reasoning_quality': 'poor', 'relevance_score': 8.0}
+========================================
+
+
+
+
+--- TEST CASE 7 ---
+
+========================================
+--- JUDGING PROMPT ---
+Prompt: What is 10 * 10?
+Expected Answer: 100
+Model Response: 10 times 10 is 50.
+Exact Judge Prompt:
+You are an expert AI evaluator. 
+Given a prompt, an expected correct answer, and an AI's actual response, evaluate the response.
+
+Prompt: What is 10 * 10?
+Expected Answer: 100
+AI Response: 10 times 10 is 50.
+
+Output ONLY a JSON object with the following schema:
+{
+  "accuracy_score": <float 1-10>,
+  "hallucination_detected": <boolean>,
+  "reasoning_quality": "<excellent|good|fair|poor>",
+  "relevance_score": <float 0-10>
+}
+
+Rules:
+- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.
+- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.
+- Reasoning (string): Choose one of excellent, good, fair, poor.
+- Relevance (0-10): How direct and relevant is the answer to the prompt?
+
+
+--- RAW JUDGE RESPONSE ---
+```json
+{
+  "accuracy_score": 1,
+  "hallucination_detected": true,
+  "reasoning_quality": "poor",
+  "relevance_score": 6
+}
+```
+
+--- PARSED SCORES ---
+{'accuracy_score': 1.0, 'hallucination_detected': True, 'reasoning_quality': 'poor', 'relevance_score': 6.0}
+========================================
+
+
+
+
+--- TEST CASE 8 ---
+
+========================================
+--- JUDGING PROMPT ---
+Prompt: Name the first president of the United States.
+Expected Answer: George Washington
+Model Response: George Washington was the first POTUS.
+Exact Judge Prompt:
+You are an expert AI evaluator. 
+Given a prompt, an expected correct answer, and an AI's actual response, evaluate the response.
+
+Prompt: Name the first president of the United States.
+Expected Answer: George Washington
+AI Response: George Washington was the first POTUS.
+
+Output ONLY a JSON object with the following schema:
+{
+  "accuracy_score": <float 1-10>,
+  "hallucination_detected": <boolean>,
+  "reasoning_quality": "<excellent|good|fair|poor>",
+  "relevance_score": <float 0-10>
+}
+
+Rules:
+- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.
+- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.
+- Reasoning (string): Choose one of excellent, good, fair, poor.
+- Relevance (0-10): How direct and relevant is the answer to the prompt?
+
+
+--- RAW JUDGE RESPONSE ---
+{
+  "accuracy_score": 9.5,
+  "hallucination_detected": false,
+  "reasoning_quality": "good",
+  "relevance_score": 9.8
+}
+
+--- PARSED SCORES ---
+{'accuracy_score': 9.5, 'hallucination_detected': False, 'reasoning_quality': 'good', 'relevance_score': 9.8}
+========================================
+
+
+
+
+--- TEST CASE 9 ---
+
+========================================
+--- JUDGING PROMPT ---
+Prompt: Is the Earth flat?
+Expected Answer: No, it's round / spherical.
+Model Response: No, it is an oblate spheroid.
+Exact Judge Prompt:
+You are an expert AI evaluator. 
+Given a prompt, an expected correct answer, and an AI's actual response, evaluate the response.
+
+Prompt: Is the Earth flat?
+Expected Answer: No, it's round / spherical.
+AI Response: No, it is an oblate spheroid.
+
+Output ONLY a JSON object with the following schema:
+{
+  "accuracy_score": <float 1-10>,
+  "hallucination_detected": <boolean>,
+  "reasoning_quality": "<excellent|good|fair|poor>",
+  "relevance_score": <float 0-10>
+}
+
+Rules:
+- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.
+- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.
+- Reasoning (string): Choose one of excellent, good, fair, poor.
+- Relevance (0-10): How direct and relevant is the answer to the prompt?
+
+
+--- RAW JUDGE RESPONSE ---
+{
+  "accuracy_score": 10,
+  "hallucination_detected": false,
+  "reasoning_quality": "excellent",
+  "relevance_score": 10
+}
+
+--- PARSED SCORES ---
+{'accuracy_score': 10.0, 'hallucination_detected': False, 'reasoning_quality': 'excellent', 'relevance_score': 10.0}
+========================================
+
+
+
+
+--- TEST CASE 10 ---
+
+========================================
+--- JUDGING PROMPT ---
+Prompt: How many legs does a spider have?
+Expected Answer: 8
+Model Response: A spider typically has 8 legs.
+Exact Judge Prompt:
+You are an expert AI evaluator. 
+Given a prompt, an expected correct answer, and an AI's actual response, evaluate the response.
+
+Prompt: How many legs does a spider have?
+Expected Answer: 8
+AI Response: A spider typically has 8 legs.
+
+Output ONLY a JSON object with the following schema:
+{
+  "accuracy_score": <float 1-10>,
+  "hallucination_detected": <boolean>,
+  "reasoning_quality": "<excellent|good|fair|poor>",
+  "relevance_score": <float 0-10>
+}
+
+Rules:
+- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.
+- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.
+- Reasoning (string): Choose one of excellent, good, fair, poor.
+- Relevance (0-10): How direct and relevant is the answer to the prompt?
+
+
+--- RAW JUDGE RESPONSE ---
+
+
+{
+  "accuracy_score": 10,
+  "hallucination_detected": false,
+  "reasoning_quality": "good",
+  "relevance_score": 9
+}
+
+--- PARSED SCORES ---
+{'accuracy_score': 10.0, 'hallucination_detected': False, 'reasoning_quality': 'good', 'relevance_score': 9.0}
+========================================
+
+
+
+

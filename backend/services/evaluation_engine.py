@@ -9,12 +9,17 @@ Orchestrates the full evaluation pipeline:
 """
 import random
 import time
+import os
+import httpx
+import logging
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from models import EvaluationRun, EvaluationResult, DatasetItem
 from services.llm_judge import judge_response
 from services.metrics import compute_run_summary
+
+logger = logging.getLogger(__name__)
 
 
 # ── Simulated AI System Response Generator ───────────────
@@ -53,6 +58,56 @@ def _simulate_ai_response(prompt: str, expected_output: str) -> tuple[str, float
     return response, latency_ms
 
 
+def _get_openrouter_response(prompt: str, model_id: str) -> tuple[str, float]:
+    """
+    Call OpenRouter API to get a real response.
+    Returns (response_text, latency_ms).
+    """
+    api_key = os.getenv("OPENROUTER_API_KEY", "")
+    if not api_key:
+        print("OPENROUTER_API_KEY not set", flush=True)
+        raise ValueError("OPENROUTER_API_KEY not set")
+
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "http://localhost:8000",
+        "X-Title": "AI Evaluation Platform"
+    }
+
+    payload = {
+        "model": model_id,
+        "messages": [
+            {"role": "user", "content": prompt}
+        ]
+    }
+
+    start_time = time.time()
+    try:
+        with httpx.Client(timeout=30.0) as client:
+            response = client.post(url, headers=headers, json=payload)
+            response.raise_for_status()
+            data = response.json()
+            latency_ms = (time.time() - start_time) * 1000
+
+            if "choices" in data and len(data["choices"]) > 0:
+                text = data["choices"][0].get("message", {}).get("content", "")
+                print(f"OpenRouter [{model_id}] text: {text[:100]}...", flush=True)
+                return text, latency_ms
+            print(f"Empty response from OpenRouter: {data}", flush=True)
+            raise ValueError("Empty response from OpenRouter")
+    except httpx.HTTPStatusError as e:
+        print(f"HTTPStatusError calling OpenRouter: {e.response.status_code} - {e.response.text}", flush=True)
+        raise
+    except Exception as e:
+        print(f"Error calling OpenRouter: {str(e)}", flush=True)
+        import traceback
+        traceback.print_exc()
+        raise
+
+
+
 def run_evaluation(db: Session, run: EvaluationRun):
     """Execute the full evaluation pipeline for a run."""
     run.status = "running"
@@ -68,8 +123,13 @@ def run_evaluation(db: Session, run: EvaluationRun):
 
         results = []
         for item in items:
-            # Step 1: Get AI response (simulated)
-            response_text, latency = _simulate_ai_response(item.prompt, item.expected_output)
+            # Step 1: Get AI response
+            if run.system.model_type == "openrouter":
+                # For openrouter, we use api_endpoint or name as model_id
+                model_id = run.system.api_endpoint or run.system.name
+                response_text, latency = _get_openrouter_response(item.prompt, model_id)
+            else:
+                response_text, latency = _simulate_ai_response(item.prompt, item.expected_output)
 
             # Step 2: Judge the response
             scores = judge_response(item.prompt, response_text, item.expected_output)

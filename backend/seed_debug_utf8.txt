@@ -1,0 +1,34 @@
+﻿Testing connection to backend...
+Creating dataset...
+Adding items to dataset...
+Registering AI System (OpenRouter Free/Auto)...
+Starting evaluation...
+Waiting for evaluation to complete.........
+Evaluation finished with status: completed
+
+--- RESULTS ---
+Prompt: ID 52
+Raw Response: hello
+Latency: 4456.95161819458 ms
+Cost: $0.033
+Scores -> Accuracy: 9.6, Hallucination: False, Relevance: 10.0
+--------------------
+Prompt: ID 53
+Raw Response: The sum of 2 and 2 is **4**. This is a basic arithmetic operation in standard mathematics.
+
+Latency: 14166.050910949707 ms
+Cost: $0.0405
+Scores -> Accuracy: 2.2, Hallucination: True, Relevance: 3.5
+--------------------
+Prompt: ID 54
+Raw Response: The capital of France is **Paris**.
+
+Latency: 4900.021553039551 ms
+Cost: $0.0402
+Scores -> Accuracy: 5.5, Hallucination: False, Relevance: 7.6
+--------------------
+
+Final Run Metrics:
+Avg Accuracy: 5.77
+Avg Latency: 7841.01
+Hallucination Rate: 33.33
