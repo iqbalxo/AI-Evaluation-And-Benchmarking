@@ -14,17 +14,23 @@ The **Run Tracing** dashboard allows you to inspect:
 
 An automated framework for evaluating and comparing large language models on custom datasets. Features include LLM-as-a-judge scoring for accuracy, hallucination detection, relevance, and latency metrics tracking.
 
-## Model Comparison
+## Supported Models
 
-This table showcases a baseline evaluation across different models integrated via OpenRouter. These metrics are evaluated against our `Production Validation Dataset` (focusing on logic, math, translation, and QA prompts).
+The platform is designed to evaluate a comprehensive set of models across different payload tiers to track cost-adjusted reasoning capabilities. The following models are supported via OpenRouter integrations:
 
-| Model | Avg Accuracy (1-10) | Latency (ms) | Hallucination Rate | Relevance Score (0-10) | Total Token Cost |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| **Gemini 2.5 Pro** | API Error | - | - | - | - |
-| **GPT-4o Mini** | 9.90 | 1610.91 | 0.0% | 9.96 | $0.128 |
-| **Llama 3 8B (Free)** | API Error | - | - | - | - |
+| Tier | Provider | Model |
+|------|----------|-------|
+| Premium | OpenAI | **GPT-4o** |
+| Premium | Anthropic | **Claude 3.5 Sonnet** |
+| Premium | Google | **Gemini 1.5 Pro** |
+| Mid-Tier | OpenAI | **GPT-4o Mini** |
+| Mid-Tier | Google | **Gemini 1.5 Flash** |
+| Mid-Tier | Meta | **Llama 3.1 70B** |
+| Open/low-cost | Meta | **Llama 3.1 8B** |
+| Open/low-cost | Mistral | **Mistral Nemo** |
 
-*(Note: These values were captured automatically from our most recent experiment sequence `Production Validation 1.0`. Abnormally low performance can indicate upstream API rejections limits or invalid keys at the time of the test run.)*
+> [!IMPORTANT]
+> **Data Integrity:** Real benchmark results should only be published after confirmed successful API calls, persisted run traces, stored experiment results, and verifiable token/cost logs. There are no benchmark evaluation results included in this document by default. 
 
 ## Application Interface
 
@@ -37,7 +43,7 @@ The platform uses an **LLM-as-a-judge** pattern (via OpenRouter) to evaluate mod
 1. **Retry Behavior**: The primary LLM judge will retry failures up to 3 times with an exponential backoff (2s, 4s, 6s) before conceding.
 2. **Fallback Judge**: If the OpenRouter API remains unreachable after all retries, the system transparently shifts to a local heuristic Fallback Judge. 
     * *Note: The Fallback Judge is purely a resilience mechanism (using token containment, fuzzy stem matching, and regex-based hallucination detection) to prevent pipeline crashes. It is not intended to replace the primary LLM judge.*
-3. **Failed-Run Handling**: If an evaluated model itself fails to generate a response (e.g. Gemini/Llama in the table above returning API limits), the run is marked as `failed` and metrics are safely ignored rather than skewing the dashboard aggregates.
+3. **Failed-Run Handling**: If an evaluated model itself fails to generate a response (e.g. returning API limits), the run is marked as `failed` and metrics are safely ignored rather than skewing the dashboard aggregates.
 
 ### Validation Suite
 

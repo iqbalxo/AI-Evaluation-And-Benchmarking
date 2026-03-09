@@ -94,12 +94,22 @@ def _get_openrouter_response(prompt: str, model_id: str) -> tuple[str, float]:
             data = response.json()
             latency_ms = (time.time() - start_time) * 1000
 
+            print(f"\n[LIVE EVAL] Status Code: {response.status_code}", flush=True)
+            print(f"[LIVE EVAL] Latency: {latency_ms:.2f}ms", flush=True)
+            print(f"[LIVE EVAL] Headers: {dict(response.headers)}", flush=True)
+
             if "choices" in data and len(data["choices"]) > 0:
                 text = data["choices"][0].get("message", {}).get("content", "")
                 usage = data.get("usage", {}).get("total_tokens", 0)
-                print(f"OpenRouter [{model_id}] text: {text[:100]}...", flush=True)
+                print(f"[LIVE EVAL] OpenRouter [{model_id}] text: {text}", flush=True)
+                print(f"[LIVE EVAL] Usage: {usage} tokens", flush=True)
+                
+                # Check for rate limiting or other provider hints in the usage details
+                if "provider_response" in data:
+                    print(f"[LIVE EVAL] Provider Response context: {data['provider_response']}", flush=True)
+                    
                 return text, latency_ms, usage
-            print(f"Empty response from OpenRouter: {data}", flush=True)
+            print(f"[LIVE EVAL] Empty response from OpenRouter: {data}", flush=True)
             raise ValueError("Empty response from OpenRouter")
     except httpx.HTTPStatusError as e:
         print(f"HTTPStatusError calling OpenRouter: {e.response.status_code} - {e.response.text}", flush=True)
@@ -169,8 +179,8 @@ def run_evaluation(db: Session, run: EvaluationRun):
                 trace_data["judge_prompt"] = scores.get("judge_prompt")
                 trace_data["judge_response"] = scores.get("raw_judge_response")
 
-                # Step 3: Simulate token cost
-                trace_data["token_cost"] = round(random.uniform(0.001, 0.05), 4)
+                # Step 3: Token cost (Pending proper implementation)
+                trace_data["token_cost"] = 0.0
 
             except Exception as item_expr:
                 trace_data["status"] = "failed"

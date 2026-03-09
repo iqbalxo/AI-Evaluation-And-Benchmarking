@@ -14,6 +14,8 @@ def create_system(payload: AISystemCreate, db: Session = Depends(get_db)):
     system = AISystem(
         name=payload.name,
         model_type=payload.model_type,
+        provider=payload.provider,
+        tier=payload.tier,
         api_endpoint=payload.api_endpoint,
         config_json=payload.config_json,
     )

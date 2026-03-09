@@ -1,0 +1,353 @@
+STDOUT:
+====== STARTING STRICT LIVE VERIFICATION ======
+Using OpenRouter Key: Yes
+
+[1] Creating Live Verification Dataset...
+  -> Created Dataset ID: 33
+  -> Added 5 simple test items.
+
+[2] Registering AI System...
+  -> Created System ID: 58 [openai/gpt-4o-mini]
+
+[3] Triggering Real Evaluation Run...
+  -> Created Run ID: 41, Status: pending
+  -> Executing run_evaluation() for Run 41...
+
+
+[LIVE EVAL] Status Code: 200
+[LIVE EVAL] Latency: 1258.62ms
+[LIVE EVAL] Headers: {'date': 'Mon, 09 Mar 2026 19:05:07 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'access-control-allow-origin': '*', 'permissions-policy': 'payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com" "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")', 'referrer-policy': 'no-referrer, strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'content-encoding': 'gzip', 'server': 'cloudflare', 'cf-ray': '9d9c596bbbddd115-DXB'}
+[LIVE EVAL] OpenRouter [openai/gpt-4o-mini] text: 4
+[LIVE EVAL] Usage: 20 tokens
+
+========================================
+--- JUDGING PROMPT ---
+Prompt: What is 2+2? Output only the number.
+Expected Answer: 4
+Model Response: 4
+Exact Judge Prompt:
+You are an expert AI evaluator. 
+Given a prompt, an expected correct answer, and an AI's actual response, evaluate the response.
+
+Prompt: What is 2+2? Output only the number.
+Expected Answer: 4
+AI Response: 4
+
+Output ONLY a JSON object with the following schema:
+{
+  "accuracy_score": <float 1-10>,
+  "hallucination_detected": <boolean>,
+  "reasoning_quality": "<excellent|good|fair|poor>",
+  "relevance_score": <float 0-10>
+}
+
+Rules:
+- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.
+- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.
+- Reasoning (string): Choose one of excellent, good, fair, poor.
+- Relevance (0-10): How direct and relevant is the answer to the prompt?
+
+
+--- JUDGE ATTEMPT 1/3 FAILED: The read operation timed out ---
+    Retrying in 2s ...
+--- JUDGE ATTEMPT 2/3 FAILED: The read operation timed out ---
+    Retrying in 4s ...
+--- RAW JUDGE RESPONSE (attempt 3) ---
+{
+  "accuracy_score": 10.0,
+  "hallucination_detected": false,
+  "reasoning_quality": "excellent",
+  "relevance_score": 10.0
+}
+
+--- PARSED SCORES ---
+{'accuracy_score': 10.0, 'hallucination_detected': False, 'reasoning_quality': 'excellent', 'relevance_score': 10.0, 'judge_prompt': 'You are an expert AI evaluator. \nGiven a prompt, an expected correct answer, and an AI\'s actual response, evaluate the response.\n\nPrompt: What is 2+2? Output only the number.\nExpected Answer: 4\nAI Response: 4\n\nOutput ONLY a JSON object with the following schema:\n{\n  "accuracy_score": <float 1-10>,\n  "hallucination_detected": <boolean>,\n  "reasoning_quality": "<excellent|good|fair|poor>",\n  "relevance_score": <float 0-10>\n}\n\nRules:\n- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.\n- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.\n- Reasoning (string): Choose one of excellent, good, fair, poor.\n- Relevance (0-10): How direct and relevant is the answer to the prompt?\n', 'raw_judge_response': '{\n  "accuracy_score": 10.0,\n  "hallucination_detected": false,\n  "reasoning_quality": "excellent",\n  "relevance_score": 10.0\n}'}
+========================================
+
+
+[LIVE EVAL] Status Code: 200
+[LIVE EVAL] Latency: 1800.36ms
+[LIVE EVAL] Headers: {'date': 'Mon, 09 Mar 2026 19:06:58 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'access-control-allow-origin': '*', 'permissions-policy': 'payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com" "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")', 'referrer-policy': 'no-referrer, strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'content-encoding': 'gzip', 'server': 'cloudflare', 'cf-ray': '9d9c5c1ccf41b478-DXB'}
+[LIVE EVAL] OpenRouter [openai/gpt-4o-mini] text: The capital of France is Paris.
+[LIVE EVAL] Usage: 21 tokens
+
+========================================
+--- JUDGING PROMPT ---
+Prompt: What is the capital of France?
+Expected Answer: Paris
+Model Response: The capital of France is Paris.
+Exact Judge Prompt:
+You are an expert AI evaluator. 
+Given a prompt, an expected correct answer, and an AI's actual response, evaluate the response.
+
+Prompt: What is the capital of France?
+Expected Answer: Paris
+AI Response: The capital of France is Paris.
+
+Output ONLY a JSON object with the following schema:
+{
+  "accuracy_score": <float 1-10>,
+  "hallucination_detected": <boolean>,
+  "reasoning_quality": "<excellent|good|fair|poor>",
+  "relevance_score": <float 0-10>
+}
+
+Rules:
+- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.
+- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.
+- Reasoning (string): Choose one of excellent, good, fair, poor.
+- Relevance (0-10): How direct and relevant is the answer to the prompt?
+
+
+--- JUDGE ATTEMPT 1/3 FAILED: The read operation timed out ---
+    Retrying in 2s ...
+--- JUDGE ATTEMPT 2/3 FAILED: The read operation timed out ---
+    Retrying in 4s ...
+--- RAW JUDGE RESPONSE (attempt 3) ---
+{
+  "accuracy_score": 10.0,
+  "hallucination_detected": false,
+  "reasoning_quality": "excellent",
+  "relevance_score": 10.0
+}
+
+--- PARSED SCORES ---
+{'accuracy_score': 10.0, 'hallucination_detected': False, 'reasoning_quality': 'excellent', 'relevance_score': 10.0, 'judge_prompt': 'You are an expert AI evaluator. \nGiven a prompt, an expected correct answer, and an AI\'s actual response, evaluate the response.\n\nPrompt: What is the capital of France?\nExpected Answer: Paris\nAI Response: The capital of France is Paris.\n\nOutput ONLY a JSON object with the following schema:\n{\n  "accuracy_score": <float 1-10>,\n  "hallucination_detected": <boolean>,\n  "reasoning_quality": "<excellent|good|fair|poor>",\n  "relevance_score": <float 0-10>\n}\n\nRules:\n- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.\n- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.\n- Reasoning (string): Choose one of excellent, good, fair, poor.\n- Relevance (0-10): How direct and relevant is the answer to the prompt?\n', 'raw_judge_response': '{\n  "accuracy_score": 10.0,\n  "hallucination_detected": false,\n  "reasoning_quality": "excellent",\n  "relevance_score": 10.0\n}'}
+========================================
+
+Error calling OpenRouter: The read operation timed out
+
+[LIVE EVAL] Status Code: 200
+[LIVE EVAL] Latency: 2292.82ms
+[LIVE EVAL] Headers: {'date': 'Mon, 09 Mar 2026 19:09:22 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'access-control-allow-origin': '*', 'permissions-policy': 'payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com" "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")', 'referrer-policy': 'no-referrer, strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'content-encoding': 'gzip', 'server': 'cloudflare', 'cf-ray': '9d9c5fa19c97dddb-DXB'}
+[LIVE EVAL] OpenRouter [openai/gpt-4o-mini] text: "Hamlet" was written by William Shakespeare. It is one of his most famous tragedies and was likely composed around 1600.
+[LIVE EVAL] Usage: 38 tokens
+
+========================================
+--- JUDGING PROMPT ---
+Prompt: Who wrote Hamlet?
+Expected Answer: William Shakespeare
+Model Response: "Hamlet" was written by William Shakespeare. It is one of his most famous tragedies and was likely composed around 1600.
+Exact Judge Prompt:
+You are an expert AI evaluator. 
+Given a prompt, an expected correct answer, and an AI's actual response, evaluate the response.
+
+Prompt: Who wrote Hamlet?
+Expected Answer: William Shakespeare
+AI Response: "Hamlet" was written by William Shakespeare. It is one of his most famous tragedies and was likely composed around 1600.
+
+Output ONLY a JSON object with the following schema:
+{
+  "accuracy_score": <float 1-10>,
+  "hallucination_detected": <boolean>,
+  "reasoning_quality": "<excellent|good|fair|poor>",
+  "relevance_score": <float 0-10>
+}
+
+Rules:
+- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.
+- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.
+- Reasoning (string): Choose one of excellent, good, fair, poor.
+- Relevance (0-10): How direct and relevant is the answer to the prompt?
+
+
+--- RAW JUDGE RESPONSE (attempt 1) ---
+{
+  "accuracy_score": 10.0,
+  "hallucination_detected": false,
+  "reasoning_quality": "good",
+  "relevance_score": 10.0
+}
+
+--- PARSED SCORES ---
+{'accuracy_score': 10.0, 'hallucination_detected': False, 'reasoning_quality': 'good', 'relevance_score': 10.0, 'judge_prompt': 'You are an expert AI evaluator. \nGiven a prompt, an expected correct answer, and an AI\'s actual response, evaluate the response.\n\nPrompt: Who wrote Hamlet?\nExpected Answer: William Shakespeare\nAI Response: "Hamlet" was written by William Shakespeare. It is one of his most famous tragedies and was likely composed around 1600.\n\nOutput ONLY a JSON object with the following schema:\n{\n  "accuracy_score": <float 1-10>,\n  "hallucination_detected": <boolean>,\n  "reasoning_quality": "<excellent|good|fair|poor>",\n  "relevance_score": <float 0-10>\n}\n\nRules:\n- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.\n- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.\n- Reasoning (string): Choose one of excellent, good, fair, poor.\n- Relevance (0-10): How direct and relevant is the answer to the prompt?\n', 'raw_judge_response': '{\n  "accuracy_score": 10.0,\n  "hallucination_detected": false,\n  "reasoning_quality": "good",\n  "relevance_score": 10.0\n}'}
+========================================
+
+
+[LIVE EVAL] Status Code: 200
+[LIVE EVAL] Latency: 1308.77ms
+[LIVE EVAL] Headers: {'date': 'Mon, 09 Mar 2026 19:09:32 GMT', 'content-type': 'application/json', 'transfer-encoding': 'chunked', 'connection': 'keep-alive', 'access-control-allow-origin': '*', 'permissions-policy': 'payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com" "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")', 'referrer-policy': 'no-referrer, strict-origin-when-cross-origin', 'x-content-type-options': 'nosniff', 'content-encoding': 'gzip', 'server': 'cloudflare', 'cf-ray': '9d9c5fe33ddf4a1f-DXB'}
+[LIVE EVAL] OpenRouter [openai/gpt-4o-mini] text: 8
+[LIVE EVAL] Usage: 21 tokens
+
+========================================
+--- JUDGING PROMPT ---
+Prompt: How many legs does a spider have? Output only the number.
+Expected Answer: 8
+Model Response: 8
+Exact Judge Prompt:
+You are an expert AI evaluator. 
+Given a prompt, an expected correct answer, and an AI's actual response, evaluate the response.
+
+Prompt: How many legs does a spider have? Output only the number.
+Expected Answer: 8
+AI Response: 8
+
+Output ONLY a JSON object with the following schema:
+{
+  "accuracy_score": <float 1-10>,
+  "hallucination_detected": <boolean>,
+  "reasoning_quality": "<excellent|good|fair|poor>",
+  "relevance_score": <float 0-10>
+}
+
+Rules:
+- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.
+- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.
+- Reasoning (string): Choose one of excellent, good, fair, poor.
+- Relevance (0-10): How direct and relevant is the answer to the prompt?
+
+
+--- RAW JUDGE RESPONSE (attempt 1) ---
+```json
+{
+  "accuracy_score": 10.0,
+  "hallucination_detected": false,
+  "reasoning_quality": "excellent",
+  "relevance_score": 10.0
+}
+```
+
+--- PARSED SCORES ---
+{'accuracy_score': 10.0, 'hallucination_detected': False, 'reasoning_quality': 'excellent', 'relevance_score': 10.0, 'judge_prompt': 'You are an expert AI evaluator. \nGiven a prompt, an expected correct answer, and an AI\'s actual response, evaluate the response.\n\nPrompt: How many legs does a spider have? Output only the number.\nExpected Answer: 8\nAI Response: 8\n\nOutput ONLY a JSON object with the following schema:\n{\n  "accuracy_score": <float 1-10>,\n  "hallucination_detected": <boolean>,\n  "reasoning_quality": "<excellent|good|fair|poor>",\n  "relevance_score": <float 0-10>\n}\n\nRules:\n- Accuracy (1-10): How factually correct is the AI response compared to the expected answer? 10 = perfect.\n- Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.\n- Reasoning (string): Choose one of excellent, good, fair, poor.\n- Relevance (0-10): How direct and relevant is the answer to the prompt?\n', 'raw_judge_response': '```json\n{\n  "accuracy_score": 10.0,\n  "hallucination_detected": false,\n  "reasoning_quality": "excellent",\n  "relevance_score": 10.0\n}\n```'}
+========================================
+
+
+[4] Run Completed!
+  -> Final Status: completed
+  -> Accuracy: 8.0
+  -> Hallucination Rate: 0.0
+  -> Avg Latency: 1332.11ms
+
+[5] Verifying Stored Traces (5 found)
+--------------------------------------------------
+  Item 95 Prompt: 'What is 2+2? Output only the number.'
+  Expected: '4'
+  Status: success
+  Raw Model Response: '4'
+  Latency: 1258.6 ms | Tokens usage: 20
+  Cost: $0.0
+  Accuracy Score: 10.0/10
+  Hallucinated: False
+  Judge Response Saved: True
+--------------------------------------------------
+  Item 96 Prompt: 'What is the capital of France?'
+  Expected: 'Paris'
+  Status: success
+  Raw Model Response: 'The capital of France is Paris.'
+  Latency: 1800.4 ms | Tokens usage: 21
+  Cost: $0.0
+  Accuracy Score: 10.0/10
+  Hallucinated: False
+  Judge Response Saved: True
+--------------------------------------------------
+  Item 97 Prompt: 'Translate 'hello' to French.'
+  Expected: 'bonjour'
+  Status: failed
+  Raw Model Response: ''
+  Latency: 0.0 ms | Tokens usage: 0
+  Cost: $0.0
+  Accuracy Score: 0.0/10
+  Hallucinated: False
+  Judge Response Saved: False
+--------------------------------------------------
+  Item 98 Prompt: 'Who wrote Hamlet?'
+  Expected: 'William Shakespeare'
+  Status: success
+  Raw Model Response: '"Hamlet" was written by William Shakespeare. It is one of his most famous tragedies and was likely composed around 1600.'
+  Latency: 2292.8 ms | Tokens usage: 38
+  Cost: $0.0
+  Accuracy Score: 10.0/10
+  Hallucinated: False
+  Judge Response Saved: True
+--------------------------------------------------
+  Item 99 Prompt: 'How many legs does a spider have? Output only the number.'
+  Expected: '8'
+  Status: success
+  Raw Model Response: '8'
+  Latency: 1308.8 ms | Tokens usage: 21
+  Cost: $0.0
+  Accuracy Score: 10.0/10
+  Hallucinated: False
+  Judge Response Saved: True
+
+====== VERIFICATION COMPLETE ======
+
+STDERR:
+C:\Python312\Lib\site-packages\pydantic\_internal\_fields.py:132: UserWarning: Field "model_type" in AISystemCreate has conflict with protected namespace "model_".
+
+You may be able to resolve this warning by setting `model_config['protected_namespaces'] = ()`.
+  warnings.warn(
+C:\Python312\Lib\site-packages\pydantic\_internal\_fields.py:132: UserWarning: Field "model_type" in AISystemOut has conflict with protected namespace "model_".
+
+You may be able to resolve this warning by setting `model_config['protected_namespaces'] = ()`.
+  warnings.warn(
+C:\Python312\Lib\site-packages\pydantic\_internal\_fields.py:132: UserWarning: Field "model_name" in EvaluationResultOut has conflict with protected namespace "model_".
+
+You may be able to resolve this warning by setting `model_config['protected_namespaces'] = ()`.
+  warnings.warn(
+Traceback (most recent call last):
+  File "C:\Python312\Lib\site-packages\httpx\_transports\default.py", line 72, in map_httpcore_exceptions
+    yield
+  File "C:\Python312\Lib\site-packages\httpx\_transports\default.py", line 236, in handle_request
+    resp = self._pool.handle_request(req)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection_pool.py", line 216, in handle_request
+    raise exc from None
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection_pool.py", line 196, in handle_request
+    response = connection.handle_request(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\connection.py", line 101, in handle_request
+    return self._connection.handle_request(request)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\http11.py", line 143, in handle_request
+    raise exc
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\http11.py", line 113, in handle_request
+    ) = self._receive_response_headers(**kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\http11.py", line 186, in _receive_response_headers
+    event = self._receive_event(timeout=timeout)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_sync\http11.py", line 224, in _receive_event
+    data = self._network_stream.read(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpcore\_backends\sync.py", line 124, in read
+    with map_exceptions(exc_map):
+  File "C:\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Python312\Lib\site-packages\httpcore\_exceptions.py", line 14, in map_exceptions
+    raise to_exc(exc) from exc
+httpcore.ReadTimeout: The read operation timed out
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "D:\iqbal\github projects\AI Evaluation & Benchmarking Platform\backend\services\evaluation_engine.py", line 92, in _get_openrouter_response
+    response = client.post(url, headers=headers, json=payload)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpx\_client.py", line 1157, in post
+    return self.request(
+           ^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpx\_client.py", line 837, in request
+    return self.send(request, auth=auth, follow_redirects=follow_redirects)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpx\_client.py", line 926, in send
+    response = self._send_handling_auth(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpx\_client.py", line 954, in _send_handling_auth
+    response = self._send_handling_redirects(
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpx\_client.py", line 991, in _send_handling_redirects
+    response = self._send_single_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpx\_client.py", line 1027, in _send_single_request
+    response = transport.handle_request(request)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python312\Lib\site-packages\httpx\_transports\default.py", line 235, in handle_request
+    with map_httpcore_exceptions():
+  File "C:\Python312\Lib\contextlib.py", line 158, in __exit__
+    self.gen.throw(value)
+  File "C:\Python312\Lib\site-packages\httpx\_transports\default.py", line 89, in map_httpcore_exceptions
+    raise mapped_exc(message) from exc
+httpx.ReadTimeout: The read operation timed out
+Failed evaluating item 97: The read operation timed out

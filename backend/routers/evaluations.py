@@ -33,19 +33,28 @@ def trigger_evaluation(payload: EvaluationRunCreate, background: BackgroundTasks
     if not dataset:
         raise HTTPException(status_code=404, detail="Dataset not found")
 
-    run = EvaluationRun(system_id=payload.system_id, dataset_id=payload.dataset_id, status="pending")
+    run = EvaluationRun(
+        system_id=payload.system_id, 
+        dataset_id=payload.dataset_id, 
+        system_name=system.name,
+        provider=system.provider,
+        tier=system.tier,
+        status="pending"
+    )
     db.add(run)
     db.commit()
     db.refresh(run)
 
-    # Launch evaluation in background
-    background.add_task(_run_eval_background, run.id)
-
-    return EvaluationRunOut(
-        **{c.name: getattr(run, c.name) for c in run.__table__.columns},
-        system_name=system.name,
-        dataset_name=dataset.name,
-    )
+    # Trigger evaluation in background
+    background.add_task(run_evaluation, run.id, db)
+    
+    kwargs = {c.name: getattr(run, c.name) for c in run.__table__.columns}
+    kwargs["system_name"] = kwargs.get("system_name") or (run.system.name if run.system else None)
+    kwargs["provider"] = kwargs.get("provider") or (run.system.provider if run.system else None)
+    kwargs["tier"] = kwargs.get("tier") or (run.system.tier if run.system else None)
+    kwargs["dataset_name"] = run.dataset.name if run.dataset else None
+    
+    return EvaluationRunOut(**kwargs)
 
 
 @router.get("/runs", response_model=List[EvaluationRunOut])
@@ -53,11 +62,12 @@ def list_runs(db: Session = Depends(get_db)):
     runs = db.query(EvaluationRun).order_by(EvaluationRun.id.desc()).all()
     out = []
     for r in runs:
-        out.append(EvaluationRunOut(
-            **{c.name: getattr(r, c.name) for c in r.__table__.columns},
-            system_name=r.system.name if r.system else None,
-            dataset_name=r.dataset.name if r.dataset else None,
-        ))
+        kwargs = {c.name: getattr(r, c.name) for c in r.__table__.columns}
+        kwargs["system_name"] = kwargs.get("system_name") or (r.system.name if r.system else None)
+        kwargs["provider"] = kwargs.get("provider") or (r.system.provider if r.system else None)
+        kwargs["tier"] = kwargs.get("tier") or (r.system.tier if r.system else None)
+        kwargs["dataset_name"] = r.dataset.name if r.dataset else None
+        out.append(EvaluationRunOut(**kwargs))
     return out
 
 
@@ -66,10 +76,14 @@ def get_run(run_id: int, db: Session = Depends(get_db)):
     r = db.query(EvaluationRun).filter(EvaluationRun.id == run_id).first()
     if not r:
         raise HTTPException(status_code=404, detail="Run not found")
+    kwargs = {c.name: getattr(r, c.name) for c in r.__table__.columns}
+    kwargs["system_name"] = kwargs.get("system_name") or (r.system.name if r.system else None)
+    kwargs["provider"] = kwargs.get("provider") or (r.system.provider if r.system else None)
+    kwargs["tier"] = kwargs.get("tier") or (r.system.tier if r.system else None)
+    kwargs["dataset_name"] = r.dataset.name if r.dataset else None
+    
     return EvaluationRunDetail(
-        **{c.name: getattr(r, c.name) for c in r.__table__.columns},
-        system_name=r.system.name if r.system else None,
-        dataset_name=r.dataset.name if r.dataset else None,
+        **kwargs,
         results=[EvaluationResultOut.model_validate(res) for res in r.results],
     )
 

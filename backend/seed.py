@@ -66,9 +66,17 @@ def main():
     # 3. Create AI Systems
     print("Registering AI Systems...")
     models = [
-        {"name": "Gemini 2.5 Pro", "model_type": "openrouter", "api_endpoint": "google/gemini-2.5-pro", "config_json": "{}"},
-        {"name": "GPT-4o Mini", "model_type": "openrouter", "api_endpoint": "openai/gpt-4o-mini", "config_json": "{}"},
-        {"name": "Llama 3 8B (Free)", "model_type": "openrouter", "api_endpoint": "meta-llama/llama-3-8b-instruct:free", "config_json": "{}"}
+        # Premium
+        {"name": "GPT-4o", "model_type": "openrouter", "provider": "OpenAI", "tier": "Premium", "api_endpoint": "openai/gpt-4o", "config_json": "{}"},
+        {"name": "Claude 3.5 Sonnet", "model_type": "openrouter", "provider": "Anthropic", "tier": "Premium", "api_endpoint": "anthropic/claude-3.5-sonnet", "config_json": "{}"},
+        {"name": "Gemini 1.5 Pro", "model_type": "openrouter", "provider": "Google", "tier": "Premium", "api_endpoint": "google/gemini-1.5-pro", "config_json": "{}"},
+        # Mid-Tier
+        {"name": "GPT-4o Mini", "model_type": "openrouter", "provider": "OpenAI", "tier": "Mid-tier", "api_endpoint": "openai/gpt-4o-mini", "config_json": "{}"},
+        {"name": "Gemini 1.5 Flash", "model_type": "openrouter", "provider": "Google", "tier": "Mid-tier", "api_endpoint": "google/gemini-1.5-flash", "config_json": "{}"},
+        {"name": "Llama 3.1 70B", "model_type": "openrouter", "provider": "Meta", "tier": "Mid-tier", "api_endpoint": "meta-llama/llama-3.1-70b-instruct", "config_json": "{}"},
+        # Open / Low-Cost
+        {"name": "Llama 3.1 8B", "model_type": "openrouter", "provider": "Meta", "tier": "Open/low-cost", "api_endpoint": "meta-llama/llama-3.1-8b-instruct", "config_json": "{}"},
+        {"name": "Mistral Nemo", "model_type": "openrouter", "provider": "Mistral", "tier": "Open/low-cost", "api_endpoint": "mistralai/mistral-nemo", "config_json": "{}"}
     ]
     
     system_ids = []
@@ -114,8 +122,8 @@ def main():
     # 6. Create Experiment
     print("Creating Experiment report...")
     exp_resp = requests.post(f"{BASE_URL}/experiments/", json={
-        "name": "Production Validation 1.0",
-        "description": "Baseline metrics comparing OpenRouter models on core evaluation tasks.",
+        "name": "Multi-Tier OpenRouter Benchmark",
+        "description": "Comprehensive evaluation of 8 LLMs across Premium, Mid-tier, and Open/low-cost tiers.",
         "run_ids": run_ids
     })
     

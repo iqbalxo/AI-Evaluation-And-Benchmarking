@@ -7,6 +7,8 @@ from datetime import datetime
 class AISystemCreate(BaseModel):
     name: str
     model_type: str
+    provider: Optional[str] = None
+    tier: Optional[str] = None
     api_endpoint: Optional[str] = None
     config_json: Optional[str] = "{}"
 
@@ -15,6 +17,8 @@ class AISystemOut(BaseModel):
     id: int
     name: str
     model_type: str
+    provider: Optional[str] = None
+    tier: Optional[str] = None
     api_endpoint: Optional[str]
     config_json: Optional[str]
     created_at: datetime
@@ -105,6 +109,8 @@ class EvaluationRunOut(BaseModel):
     total_cost: Optional[float]
     total_items: int
     system_name: Optional[str] = None
+    provider: Optional[str] = None
+    tier: Optional[str] = None
     dataset_name: Optional[str] = None
 
     class Config:

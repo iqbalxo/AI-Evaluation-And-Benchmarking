@@ -10,6 +10,8 @@ class AISystem(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
     model_type = Column(String(100), nullable=False)
+    provider = Column(String(100), nullable=True)
+    tier = Column(String(50), nullable=True) # Premium, Mid-tier, Open Source
     api_endpoint = Column(String(500), nullable=True)
     config_json = Column(Text, default="{}")
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
@@ -49,6 +51,11 @@ class EvaluationRun(Base):
     id = Column(Integer, primary_key=True, index=True)
     system_id = Column(Integer, ForeignKey("ai_systems.id"), nullable=False)
     dataset_id = Column(Integer, ForeignKey("evaluation_datasets.id"), nullable=False)
+
+    system_name = Column(String(255), nullable=True)
+    provider = Column(String(100), nullable=True)
+    tier = Column(String(50), nullable=True)
+
     status = Column(String(50), default="pending")  # pending, running, completed, failed
     started_at = Column(DateTime, nullable=True)
     completed_at = Column(DateTime, nullable=True)

@@ -222,6 +222,7 @@ export default function Experiments() {
                                     <tr>
                                         <th>Run</th>
                                         <th>System</th>
+                                        <th>Tier</th>
                                         <th>Dataset</th>
                                         <th>Accuracy</th>
                                         <th>Relevance</th>
@@ -235,7 +236,12 @@ export default function Experiments() {
                                     {comparison.runs.map(r => (
                                         <tr key={r.id}>
                                             <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>#{r.id}</td>
-                                            <td>{r.system_name}</td>
+                                            <td>{r.system_name}
+                                                {r.provider && <div style={{ fontSize: '0.7em', color: 'var(--text-muted)' }}>{r.provider}</div>}
+                                            </td>
+                                            <td>
+                                                {r.tier ? <span className="badge" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }}>{r.tier}</span> : '—'}
+                                            </td>
                                             <td>{r.dataset_name}</td>
                                             <td className={r.avg_accuracy >= 7 ? 'score-high' : r.avg_accuracy >= 4 ? 'score-mid' : 'score-low'}>{r.avg_accuracy?.toFixed(2)}</td>
                                             <td>{r.avg_relevance?.toFixed(2)}</td>
