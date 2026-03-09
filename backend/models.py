@@ -88,13 +88,13 @@ class EvaluationResult(Base):
     judge_response = Column(Text, nullable=True)
     
     # Metrics
-    accuracy_score = Column(Float, default=0.0)
-    hallucination_flag = Column(Boolean, default=False)
-    reasoning_quality = Column(String(50), default="fair")
-    relevance_score = Column(Float, default=0.0)
-    latency_ms = Column(Float, default=0.0)
-    token_usage = Column(Integer, default=0)
-    token_cost = Column(Float, default=0.0)
+    accuracy_score = Column(Float, nullable=True)
+    hallucination_flag = Column(Boolean, nullable=True)
+    reasoning_quality = Column(String(50), nullable=True)
+    relevance_score = Column(Float, nullable=True)
+    latency_ms = Column(Float, nullable=True)
+    token_usage = Column(Integer, nullable=True)
+    token_cost = Column(Float, nullable=True)
     
     # Status
     status = Column(String(50), default="success")  # success, failed

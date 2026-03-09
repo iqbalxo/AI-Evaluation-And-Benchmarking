@@ -6,35 +6,43 @@ Computes summary metrics from a list of individual EvaluationResult rows.
 from typing import List
 
 
+def _get_valid(results: list, attr: str):
+    return [getattr(r, attr) for r in results if r.status == "success" and getattr(r, attr) is not None]
+
 def calc_avg_accuracy(results: list) -> float:
-    if not results:
+    valid = _get_valid(results, "accuracy_score")
+    if not valid:
         return 0.0
-    return round(sum(r.accuracy_score for r in results) / len(results), 2)
+    return round(sum(valid) / len(valid), 2)
 
 
 def calc_hallucination_rate(results: list) -> float:
-    if not results:
+    valid = _get_valid(results, "hallucination_flag")
+    if not valid:
         return 0.0
-    flagged = sum(1 for r in results if r.hallucination_flag)
-    return round(flagged / len(results) * 100, 2)
+    flagged = sum(1 for flag in valid if flag)
+    return round(flagged / len(valid) * 100, 2)
 
 
 def calc_avg_latency(results: list) -> float:
-    if not results:
+    valid = _get_valid(results, "latency_ms")
+    if not valid:
         return 0.0
-    return round(sum(r.latency_ms for r in results) / len(results), 2)
+    return round(sum(valid) / len(valid), 2)
 
 
 def calc_total_cost(results: list) -> float:
-    if not results:
+    valid = _get_valid(results, "token_cost")
+    if not valid:
         return 0.0
-    return round(sum(r.token_cost for r in results), 4)
+    return round(sum(valid), 4)
 
 
 def calc_avg_relevance(results: list) -> float:
-    if not results:
+    valid = _get_valid(results, "relevance_score")
+    if not valid:
         return 0.0
-    return round(sum(r.relevance_score for r in results) / len(results), 2)
+    return round(sum(valid) / len(valid), 2)
 
 
 def compute_run_summary(results: list) -> dict:

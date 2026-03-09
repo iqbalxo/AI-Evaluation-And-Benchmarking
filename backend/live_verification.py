@@ -35,12 +35,30 @@ def run_live_test():
         print(f"  -> Created Dataset ID: {ds.id}")
 
         # Add 5 simple prompts
+        # Add 15 diverse prompts across categories
         prompts = [
-            ("What is 2+2? Output only the number.", "4"),
-            ("What is the capital of France?", "Paris"),
-            ("Translate 'hello' to French.", "bonjour"),
-            ("Who wrote Hamlet?", "William Shakespeare"),
-            ("How many legs does a spider have? Output only the number.", "8")
+            # Arithmetic
+            ("What is 25 * 4 + 10?", "110"),
+            ("A train travels 60 miles an hour. How far does it go in 2.5 hours?", "150 miles"),
+            ("Solve for x: 2x + 5 = 15", "x = 5"),
+            ("What is the square root of 144?", "12"),
+            
+            # Factual QA
+            ("What is the capital of Japan?", "Tokyo"),
+            ("Who was the first President of the United States?", "George Washington"),
+            ("Which planet is known as the Red Planet?", "Mars"),
+            ("In what year did the Titanic sink?", "1912"),
+            
+            # Translation
+            ("Translate 'good morning' to Spanish.", "buenos días"),
+            ("Translate 'thank you very much' to French.", "merci beaucoup"),
+            ("What is the German word for 'apple'?", "Apfel"),
+            
+            # Logical Reasoning
+            ("If all blips are blops, and some blops are blurps, are all blips blurps?", "No"),
+            ("John is twice as old as Mary. If Mary is 10, how old will John be in 5 years?", "25"),
+            ("Which is heavier: a pound of feathers or a pound of bricks?", "They weigh the same"),
+            ("I have no doors but I have keys, I have no rooms but I have space. What am I?", "A keyboard")
         ]
         
         for p, exp in prompts:
@@ -102,8 +120,10 @@ def run_live_test():
             print(f"  Expected: '{t.expected_output}'")
             print(f"  Status: {t.status}")
             print(f"  Raw Model Response: '{t.response}'")
-            print(f"  Latency: {t.latency_ms:.1f} ms | Tokens usage: {t.token_usage}")
-            print(f"  Cost: ${t.token_cost}")
+            lat_str = f"{t.latency_ms:.1f}" if t.latency_ms is not None else "None"
+            print(f"  Latency: {lat_str} ms | Tokens usage: {t.token_usage}")
+            cost_str = f"${t.token_cost}" if t.token_cost is not None else "None"
+            print(f"  Cost: {cost_str}")
             print(f"  Accuracy Score: {t.accuracy_score}/10")
             print(f"  Hallucinated: {t.hallucination_flag}")
             print(f"  Judge Response Saved: {bool(t.judge_response)}")
