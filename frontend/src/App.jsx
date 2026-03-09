@@ -4,6 +4,7 @@ import Systems from './pages/Systems.jsx';
 import Datasets from './pages/Datasets.jsx';
 import Evaluations from './pages/Evaluations.jsx';
 import Experiments from './pages/Experiments.jsx';
+import RunTracing from './pages/RunTracing.jsx';
 
 const NAV_ITEMS = [
     { id: 'dashboard', icon: '📊', label: 'Dashboard' },
@@ -11,6 +12,7 @@ const NAV_ITEMS = [
     { id: 'datasets', icon: '📁', label: 'Datasets' },
     { id: 'evaluations', icon: '🧪', label: 'Evaluations' },
     { id: 'experiments', icon: '⚗️', label: 'Experiments' },
+    { id: 'runtracing', icon: '🔍', label: 'Run Tracing' },
 ];
 
 const PAGES = {
@@ -19,6 +21,7 @@ const PAGES = {
     datasets: Datasets,
     evaluations: Evaluations,
     experiments: Experiments,
+    runtracing: RunTracing,
 };
 
 export default function App() {

@@ -70,13 +70,29 @@ class EvaluationResult(Base):
     id = Column(Integer, primary_key=True, index=True)
     run_id = Column(Integer, ForeignKey("evaluation_runs.id"), nullable=False)
     item_id = Column(Integer, ForeignKey("dataset_items.id"), nullable=False)
+    
+    # Trace telemetry
+    prompt = Column(Text, nullable=True)
+    expected_output = Column(Text, nullable=True)
+    model_name = Column(String(255), nullable=True)
+    provider_name = Column(String(255), nullable=True)
     response = Column(Text, default="")
+    judge_prompt = Column(Text, nullable=True)
+    judge_response = Column(Text, nullable=True)
+    
+    # Metrics
     accuracy_score = Column(Float, default=0.0)
     hallucination_flag = Column(Boolean, default=False)
     reasoning_quality = Column(String(50), default="fair")
     relevance_score = Column(Float, default=0.0)
     latency_ms = Column(Float, default=0.0)
+    token_usage = Column(Integer, default=0)
     token_cost = Column(Float, default=0.0)
+    
+    # Status
+    status = Column(String(50), default="success")  # success, failed
+    error_message = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     run = relationship("EvaluationRun", back_populates="results")
     item = relationship("DatasetItem", back_populates="results")

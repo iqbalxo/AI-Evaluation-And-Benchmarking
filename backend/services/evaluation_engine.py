@@ -55,7 +55,10 @@ def _simulate_ai_response(prompt: str, expected_output: str) -> tuple[str, float
         response = f"I think the answer involves quantum computing and neural networks applied to {prompt[:30]}..."
 
     latency_ms = round(random.uniform(50, 800), 1)
-    return response, latency_ms
+    prompt_tokens = len(prompt.split()) * 1.3
+    comp_tokens = len(response.split()) * 1.3
+    token_usage = int(prompt_tokens + comp_tokens)
+    return response, latency_ms, token_usage
 
 
 def _get_openrouter_response(prompt: str, model_id: str) -> tuple[str, float]:
@@ -93,8 +96,9 @@ def _get_openrouter_response(prompt: str, model_id: str) -> tuple[str, float]:
 
             if "choices" in data and len(data["choices"]) > 0:
                 text = data["choices"][0].get("message", {}).get("content", "")
+                usage = data.get("usage", {}).get("total_tokens", 0)
                 print(f"OpenRouter [{model_id}] text: {text[:100]}...", flush=True)
-                return text, latency_ms
+                return text, latency_ms, usage
             print(f"Empty response from OpenRouter: {data}", flush=True)
             raise ValueError("Empty response from OpenRouter")
     except httpx.HTTPStatusError as e:
@@ -123,32 +127,58 @@ def run_evaluation(db: Session, run: EvaluationRun):
 
         results = []
         for item in items:
-            # Step 1: Get AI response
-            if run.system.model_type == "openrouter":
-                # For openrouter, we use api_endpoint or name as model_id
-                model_id = run.system.api_endpoint or run.system.name
-                response_text, latency = _get_openrouter_response(item.prompt, model_id)
-            else:
-                response_text, latency = _simulate_ai_response(item.prompt, item.expected_output)
+            trace_data = {
+                "run_id": run.id,
+                "item_id": item.id,
+                "prompt": item.prompt,
+                "expected_output": item.expected_output,
+                "model_name": run.system.api_endpoint or run.system.name,
+                "provider_name": run.system.model_type,
+                "response": "",
+                "judge_prompt": None,
+                "judge_response": None,
+                "accuracy_score": 0.0,
+                "hallucination_flag": False,
+                "reasoning_quality": "poor",
+                "relevance_score": 0.0,
+                "latency_ms": 0.0,
+                "token_usage": 0,
+                "token_cost": 0.0,
+                "status": "success",
+                "error_message": None
+            }
+            
+            try:
+                # Step 1: Get AI response
+                if run.system.model_type == "openrouter":
+                    model_id = run.system.api_endpoint or run.system.name
+                    response_text, latency, usage = _get_openrouter_response(item.prompt, model_id)
+                else:
+                    response_text, latency, usage = _simulate_ai_response(item.prompt, item.expected_output)
 
-            # Step 2: Judge the response
-            scores = judge_response(item.prompt, response_text, item.expected_output)
+                trace_data["response"] = response_text
+                trace_data["latency_ms"] = latency
+                trace_data["token_usage"] = usage
 
-            # Step 3: Simulate token cost
-            token_cost = round(random.uniform(0.001, 0.05), 4)
+                # Step 2: Judge the response
+                scores = judge_response(item.prompt, response_text, item.expected_output)
+                trace_data["accuracy_score"] = scores.get("accuracy_score", 0.0)
+                trace_data["hallucination_flag"] = scores.get("hallucination_detected", False)
+                trace_data["reasoning_quality"] = scores.get("reasoning_quality", "poor")
+                trace_data["relevance_score"] = scores.get("relevance_score", 0.0)
+                trace_data["judge_prompt"] = scores.get("judge_prompt")
+                trace_data["judge_response"] = scores.get("raw_judge_response")
+
+                # Step 3: Simulate token cost
+                trace_data["token_cost"] = round(random.uniform(0.001, 0.05), 4)
+
+            except Exception as item_expr:
+                trace_data["status"] = "failed"
+                trace_data["error_message"] = str(item_expr)
+                logger.error(f"Failed evaluating item {item.id}: {item_expr}")
 
             # Step 4: Create result record
-            result = EvaluationResult(
-                run_id=run.id,
-                item_id=item.id,
-                response=response_text,
-                accuracy_score=scores["accuracy_score"],
-                hallucination_flag=scores["hallucination_detected"],
-                reasoning_quality=scores["reasoning_quality"],
-                relevance_score=scores["relevance_score"],
-                latency_ms=latency,
-                token_cost=token_cost,
-            )
+            result = EvaluationResult(**trace_data)
             db.add(result)
             results.append(result)
 

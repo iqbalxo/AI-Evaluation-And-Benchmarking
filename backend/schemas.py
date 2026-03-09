@@ -69,13 +69,23 @@ class EvaluationResultOut(BaseModel):
     id: int
     run_id: int
     item_id: int
+    prompt: Optional[str] = None
+    expected_output: Optional[str] = None
+    model_name: Optional[str] = None
+    provider_name: Optional[str] = None
     response: str
+    judge_prompt: Optional[str] = None
+    judge_response: Optional[str] = None
     accuracy_score: float
     hallucination_flag: bool
     reasoning_quality: str
     relevance_score: float
     latency_ms: float
+    token_usage: Optional[int] = 0
     token_cost: float
+    status: Optional[str] = "success"
+    error_message: Optional[str] = None
+    created_at: Optional[datetime] = None
 
     class Config:
         from_attributes = True
