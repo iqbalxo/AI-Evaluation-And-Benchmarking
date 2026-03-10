@@ -228,8 +228,10 @@ export default function Experiments() {
                                         <th>Relevance</th>
                                         <th>Halluc. %</th>
                                         <th>Latency</th>
+                                        <th>Tokens (Avg)</th>
                                         <th>Cost</th>
-                                        <th>Items</th>
+                                        <th>Success</th>
+                                        <th>Failed</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -243,12 +245,14 @@ export default function Experiments() {
                                                 {r.tier ? <span className="badge" style={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-secondary)' }}>{r.tier}</span> : '—'}
                                             </td>
                                             <td>{r.dataset_name}</td>
-                                            <td className={r.avg_accuracy >= 7 ? 'score-high' : r.avg_accuracy >= 4 ? 'score-mid' : 'score-low'}>{r.avg_accuracy?.toFixed(2)}</td>
-                                            <td>{r.avg_relevance?.toFixed(2)}</td>
-                                            <td>{r.hallucination_rate?.toFixed(1)}%</td>
-                                            <td>{r.avg_latency_ms?.toFixed(0)} ms</td>
-                                            <td>${r.total_cost?.toFixed(4)}</td>
-                                            <td>{r.total_items}</td>
+                                            <td className={r.avg_accuracy >= 7 ? 'score-high' : r.avg_accuracy >= 4 ? 'score-mid' : 'score-low'}>{r.avg_accuracy?.toFixed(2) || '0.00'}</td>
+                                            <td>{r.avg_relevance?.toFixed(2) || '0.00'}</td>
+                                            <td>{r.hallucination_rate?.toFixed(1) || '0.0'}%</td>
+                                            <td>{r.avg_latency_ms?.toFixed(0) || '0'} ms</td>
+                                            <td>{r.avg_token_usage ? r.avg_token_usage.toFixed(0) : '0'}</td>
+                                            <td>{r.total_cost != null ? `$${r.total_cost.toFixed(4)}` : <span style={{ color: 'var(--text-muted)' }}>N/A</span>}</td>
+                                            <td><span className="badge badge-completed">{r.successful_runs || 0}</span></td>
+                                            <td>{r.failed_runs > 0 ? <span className="badge badge-failed">{r.failed_runs}</span> : r.failed_runs || 0}</td>
                                         </tr>
                                     ))}
                                 </tbody>

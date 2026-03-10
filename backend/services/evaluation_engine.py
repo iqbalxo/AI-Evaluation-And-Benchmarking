@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 from models import EvaluationRun, EvaluationResult, DatasetItem
 from services.llm_judge import judge_response
 from services.metrics import compute_run_summary
+from pricing import calculate_cost
 
 logger = logging.getLogger(__name__)
 
@@ -179,8 +180,8 @@ def run_evaluation(db: Session, run: EvaluationRun):
                 trace_data["judge_prompt"] = scores.get("judge_prompt")
                 trace_data["judge_response"] = scores.get("raw_judge_response")
 
-                # Step 3: Token cost (Pending proper implementation)
-                trace_data["token_cost"] = 0.0
+                # Step 3: Token cost (Calculate exact via pricing mapping)
+                trace_data["token_cost"] = calculate_cost(trace_data["model_name"], usage)
 
             except Exception as item_expr:
                 trace_data["status"] = "failed"
@@ -200,6 +201,9 @@ def run_evaluation(db: Session, run: EvaluationRun):
         run.avg_latency_ms = summary["avg_latency_ms"]
         run.hallucination_rate = summary["hallucination_rate"]
         run.avg_relevance = summary["avg_relevance"]
+        run.avg_token_usage = summary["avg_token_usage"]
+        run.successful_runs = summary["successful_runs"]
+        run.failed_runs = summary["failed_runs"]
         run.total_cost = summary["total_cost"]
         run.total_items = summary["total_items"]
         run.status = "completed"

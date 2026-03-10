@@ -46,7 +46,7 @@ def trigger_evaluation(payload: EvaluationRunCreate, background: BackgroundTasks
     db.refresh(run)
 
     # Trigger evaluation in background
-    background.add_task(run_evaluation, run.id, db)
+    background.add_task(_run_eval_background, run.id)
     
     kwargs = {c.name: getattr(run, c.name) for c in run.__table__.columns}
     kwargs["system_name"] = kwargs.get("system_name") or (run.system.name if run.system else None)

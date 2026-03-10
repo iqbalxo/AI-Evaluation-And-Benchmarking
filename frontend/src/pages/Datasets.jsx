@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getDatasets, createDataset, deleteDataset, getDatasetItems, addDatasetItem } from '../api.js';
+import { getDatasets, createDataset, deleteDataset, getDatasetItems, addDatasetItem, uploadDataset } from '../api.js';
 
 export default function Datasets() {
     const [datasets, setDatasets] = useState([]);
@@ -8,6 +8,8 @@ export default function Datasets() {
     const [expanded, setExpanded] = useState(null);
     const [items, setItems] = useState([]);
     const [itemForm, setItemForm] = useState({ prompt: '', expected_output: '', evaluation_type: 'question_answering', difficulty: 'medium' });
+    const [uploadFile, setUploadFile] = useState(null);
+    const [uploading, setUploading] = useState(false);
 
     const load = () => getDatasets().then(setDatasets).finally(() => setLoading(false));
     useEffect(() => { load(); }, []);
@@ -18,6 +20,22 @@ export default function Datasets() {
         await createDataset(form);
         setForm({ name: '', description: '' });
         await load();
+    };
+
+    const handleUpload = async (e) => {
+        e.preventDefault();
+        if (!uploadFile) return;
+        setUploading(true);
+        try {
+            await uploadDataset(uploadFile);
+            setUploadFile(null);
+            document.getElementById('upload-input').value = "";
+            await load();
+        } catch (err) {
+            alert(err.message);
+        } finally {
+            setUploading(false);
+        }
     };
 
     const handleExpand = async (id) => {
@@ -53,21 +71,53 @@ export default function Datasets() {
             </div>
 
             {/* Create Dataset */}
-            <div className="card section animate-in">
-                <div className="chart-title">Create New Dataset</div>
-                <form onSubmit={handleCreateDataset}>
-                    <div className="form-row">
-                        <div className="form-field">
-                            <label htmlFor="ds-name">Dataset Name</label>
-                            <input id="ds-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. QA Benchmark v1" required />
+            <div className="card section animate-in" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: '1.5rem' }}>
+                <div>
+                    <div className="chart-title">Create Manual Dataset</div>
+                    <form onSubmit={handleCreateDataset}>
+                        <div className="form-row">
+                            <div className="form-field">
+                                <label htmlFor="ds-name">Dataset Name</label>
+                                <input id="ds-name" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="e.g. QA Benchmark v1" required />
+                            </div>
+                            <div className="form-field">
+                                <label htmlFor="ds-desc">Description</label>
+                                <input id="ds-desc" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Brief description" />
+                            </div>
                         </div>
+                        <button type="submit" className="btn btn-primary" id="btn-create-dataset">➕ Create Dataset</button>
+                    </form>
+                </div>
+
+                <div style={{ borderLeft: '1px solid var(--glass-border)', paddingLeft: '1.5rem' }}>
+                    <div className="chart-title">Upload Existing Dataset</div>
+                    <form onSubmit={handleUpload}>
                         <div className="form-field">
-                            <label htmlFor="ds-desc">Description</label>
-                            <input id="ds-desc" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Brief description" />
+                            <label>Upload CSV or JSON file</label>
+                            <input
+                                id="upload-input"
+                                type="file"
+                                accept=".csv,.json"
+                                onChange={e => setUploadFile(e.target.files[0])}
+                                style={{
+                                    padding: '0.5rem',
+                                    border: '1px dashed var(--glass-border)',
+                                    borderRadius: '8px',
+                                    background: 'rgba(255,255,255,0.02)',
+                                    width: '100%',
+                                    color: 'var(--text-secondary)'
+                                }}
+                                required
+                            />
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.4rem' }}>
+                                Required columns/keys: <code>prompt</code>, <code>expected_output</code> (or <code>expected</code>).
+                            </div>
                         </div>
-                    </div>
-                    <button type="submit" className="btn btn-primary" id="btn-create-dataset">➕ Create Dataset</button>
-                </form>
+                        <button type="submit" className="btn btn-primary" disabled={uploading || !uploadFile} style={{ marginTop: '0.5rem' }}>
+                            {uploading ? '⏳ Uploading...' : '⬆️ Upload Dataset'}
+                        </button>
+                    </form>
+                </div>
             </div>
 
             {/* Dataset List */}

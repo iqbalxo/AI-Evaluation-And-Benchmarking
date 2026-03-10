@@ -63,8 +63,11 @@ class EvaluationRun(Base):
     avg_latency_ms = Column(Float, nullable=True)
     hallucination_rate = Column(Float, nullable=True)
     avg_relevance = Column(Float, nullable=True)
+    avg_token_usage = Column(Float, nullable=True)
     total_cost = Column(Float, nullable=True)
     total_items = Column(Integer, default=0)
+    successful_runs = Column(Integer, default=0)
+    failed_runs = Column(Integer, default=0)
 
     system = relationship("AISystem", back_populates="evaluation_runs")
     dataset = relationship("EvaluationDataset", back_populates="evaluation_runs")

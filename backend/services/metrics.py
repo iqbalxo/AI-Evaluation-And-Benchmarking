@@ -45,6 +45,21 @@ def calc_avg_relevance(results: list) -> float:
     return round(sum(valid) / len(valid), 2)
 
 
+def calc_avg_token_usage(results: list) -> float:
+    valid = _get_valid(results, "token_usage")
+    if not valid:
+        return 0.0
+    return round(sum(valid) / len(valid), 2)
+
+
+def calc_successful_runs(results: list) -> int:
+    return sum(1 for r in results if r.status == "success")
+
+
+def calc_failed_runs(results: list) -> int:
+    return sum(1 for r in results if r.status == "failed")
+
+
 def compute_run_summary(results: list) -> dict:
     """Compute all summary metrics for an evaluation run."""
     return {
@@ -53,5 +68,8 @@ def compute_run_summary(results: list) -> dict:
         "avg_latency_ms": calc_avg_latency(results),
         "total_cost": calc_total_cost(results),
         "avg_relevance": calc_avg_relevance(results),
+        "avg_token_usage": calc_avg_token_usage(results),
+        "successful_runs": calc_successful_runs(results),
+        "failed_runs": calc_failed_runs(results),
         "total_items": len(results),
     }

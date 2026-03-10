@@ -106,8 +106,11 @@ class EvaluationRunOut(BaseModel):
     avg_latency_ms: Optional[float]
     hallucination_rate: Optional[float]
     avg_relevance: Optional[float]
+    avg_token_usage: Optional[float] = None
     total_cost: Optional[float]
     total_items: int
+    successful_runs: Optional[int] = 0
+    failed_runs: Optional[int] = 0
     system_name: Optional[str] = None
     provider: Optional[str] = None
     tier: Optional[str] = None

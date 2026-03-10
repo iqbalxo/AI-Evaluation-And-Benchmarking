@@ -34,6 +34,19 @@ export const deleteDataset = (id) => request(`/datasets/${id}`, { method: 'DELET
 export const getDatasetItems = (id) => request(`/datasets/${id}/items`);
 export const addDatasetItem = (id, data) => request(`/datasets/${id}/items`, { method: 'POST', body: data });
 export const addDatasetItemsBatch = (id, items) => request(`/datasets/${id}/items/batch`, { method: 'POST', body: items });
+export const uploadDataset = async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${BASE}/datasets/upload`, {
+        method: 'POST',
+        body: formData,
+    });
+    if (!res.ok) {
+        const err = await res.json().catch(() => ({ detail: res.statusText }));
+        throw new Error(err.detail || 'Upload failed');
+    }
+    return res.json();
+};
 
 // ── Evaluations ──
 export const triggerRun = (data) => request('/evaluations/run', { method: 'POST', body: data });
