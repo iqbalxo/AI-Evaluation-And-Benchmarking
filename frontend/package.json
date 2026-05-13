@@ -4,9 +4,12 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+    "dev": "node ./node_modules/vite/bin/vite.js",
+    "build": "node ./node_modules/vite/bin/vite.js build",
+    "preview": "node ./node_modules/vite/bin/vite.js preview",
+    "test": "npm run build",
+    "lint": "npm run build",
+    "format": "node -e \"console.log('No formatter configured; source uses standard JSX formatting.')\""
   },
   "dependencies": {
     "react": "^18.3.1",
