@@ -11,14 +11,16 @@ import random
 import time
 import os
 import json
-import httpx
 import logging
+import uuid
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from models import EvaluationRun, EvaluationResult, DatasetItem
 from services.llm_judge import judge_response
 from services.metrics import compute_run_summary
+from services.answer_matchers import evaluate_matcher
+from services.provider_client import ModelRequest, OpenRouterClient
 from pricing import calculate_cost
 
 logger = logging.getLogger(__name__)
@@ -86,64 +88,20 @@ def _get_openrouter_response(prompt: str, model_id: str, config: dict | None = N
     if not model_id:
         raise ValueError("OpenRouter model id is required")
 
-    api_key = os.getenv("OPENROUTER_API_KEY", "")
-    if not api_key:
-        print("OPENROUTER_API_KEY not set", flush=True)
-        raise ValueError("OPENROUTER_API_KEY is not set; add it to .env or your shell environment")
-
-    url = "https://openrouter.ai/api/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-        "HTTP-Referer": os.getenv("OPENROUTER_SITE_URL", "http://localhost:5173"),
-        "X-Title": os.getenv("OPENROUTER_APP_NAME", "AI Evaluation Platform"),
-    }
-
-    payload = {
-        "model": model_id,
-        "messages": [
-            {"role": "user", "content": prompt}
-        ]
-    }
     config = config or {}
-    for key in ("temperature", "max_tokens", "top_p"):
-        if key in config and config[key] not in (None, ""):
-            payload[key] = config[key]
-
-    start_time = time.time()
-    try:
-        with httpx.Client(timeout=30.0) as client:
-            response = client.post(url, headers=headers, json=payload)
-            response.raise_for_status()
-            data = response.json()
-            latency_ms = (time.time() - start_time) * 1000
-
-            print(f"\n[LIVE EVAL] Status Code: {response.status_code}", flush=True)
-            print(f"[LIVE EVAL] Latency: {latency_ms:.2f}ms", flush=True)
-            print(f"[LIVE EVAL] Headers: {dict(response.headers)}", flush=True)
-
-            if "choices" in data and len(data["choices"]) > 0:
-                text = data["choices"][0].get("message", {}).get("content", "")
-                usage = data.get("usage", {}).get("total_tokens", 0)
-                print(f"[LIVE EVAL] OpenRouter [{model_id}] text: {text}", flush=True)
-                print(f"[LIVE EVAL] Usage: {usage} tokens", flush=True)
-
-                # Check for rate limiting or other provider hints in the usage details
-                if "provider_response" in data:
-                    print(f"[LIVE EVAL] Provider Response context: {data['provider_response']}", flush=True)
-
-                return text, latency_ms, usage
-            print(f"[LIVE EVAL] Empty response from OpenRouter: {data}", flush=True)
-            raise ValueError("Empty response from OpenRouter")
-    except httpx.HTTPStatusError as e:
-        print(f"HTTPStatusError calling OpenRouter: {e.response.status_code} - {e.response.text}", flush=True)
-        detail = e.response.text[:500] if e.response is not None else str(e)
-        raise ValueError(
-            f"OpenRouter request failed for {model_id}: HTTP {e.response.status_code} - {detail}"
-        ) from e
-    except Exception as e:
-        print(f"Error calling OpenRouter: {str(e)}", flush=True)
-        raise
+    request = ModelRequest(
+        prompt=prompt,
+        model_id=model_id,
+        temperature=config.get("temperature"),
+        max_tokens=config.get("max_tokens"),
+        top_p=config.get("top_p"),
+        seed=config.get("seed"),
+        timeout_seconds=float(config.get("timeout_seconds", 30.0)),
+    )
+    response = OpenRouterClient().complete(request)
+    print(f"[LIVE EVAL] OpenRouter [{model_id}] text: {response.text}", flush=True)
+    print(f"[LIVE EVAL] Usage: {response.token_usage} tokens", flush=True)
+    return response.text, response.latency_ms, response.token_usage
 
 
 
@@ -151,6 +109,7 @@ def run_evaluation(db: Session, run: EvaluationRun):
     """Execute the full evaluation pipeline for a run."""
     run.status = "running"
     run.started_at = datetime.now(timezone.utc)
+    run.trace_id = run.trace_id or str(uuid.uuid4())
     db.commit()
 
     try:
@@ -159,19 +118,38 @@ def run_evaluation(db: Session, run: EvaluationRun):
             run.status = "failed"
             db.commit()
             return
+        run.progress_total = len(items)
+        run.progress_current = 0
+        db.commit()
 
         results = []
         for item in items:
+            if run.cancellation_requested:
+                run.status = "cancelled"
+                db.commit()
+                break
+
+            config = _load_system_config(run.model_config_json or run.system.config_json)
+            item_trace_id = str(uuid.uuid4())
             trace_data = {
                 "run_id": run.id,
                 "item_id": item.id,
+                "trace_id": item_trace_id,
                 "prompt": item.prompt,
                 "expected_output": item.expected_output,
                 "model_name": run.system.api_endpoint or run.system.name,
-                "provider_name": run.system.model_type,
+                "provider_name": run.system.provider or run.system.model_type,
                 "response": "",
                 "judge_prompt": None,
                 "judge_response": None,
+                "judge_model": run.judge_model,
+                "judge_rubric": run.judge_rubric,
+                "judge_confidence": None,
+                "judge_explanation": None,
+                "matcher_type": item.matcher_type,
+                "matcher_passed": None,
+                "matcher_score": None,
+                "matcher_reason": None,
                 "accuracy_score": None,
                 "hallucination_flag": None,
                 "reasoning_quality": None,
@@ -180,14 +158,16 @@ def run_evaluation(db: Session, run: EvaluationRun):
                 "token_usage": None,
                 "token_cost": None,
                 "status": "success",
-                "error_message": None
+                "error_message": None,
+                "failure_category": None,
+                "model_temperature": config.get("temperature"),
+                "model_timeout_ms": float(config.get("timeout_seconds", 30.0)) * 1000,
             }
-            
+
             try:
                 # Step 1: Get AI response
                 if run.system.model_type == "openrouter":
                     model_id = run.system.api_endpoint or run.system.name
-                    config = _load_system_config(run.system.config_json)
                     response_text, latency, usage = _get_openrouter_response(item.prompt, model_id, config)
                 else:
                     response_text, latency, usage = _simulate_ai_response(item.prompt, item.expected_output)
@@ -196,14 +176,36 @@ def run_evaluation(db: Session, run: EvaluationRun):
                 trace_data["latency_ms"] = latency
                 trace_data["token_usage"] = usage
 
-                # Step 2: Judge the response
-                scores = judge_response(item.prompt, response_text, item.expected_output)
+                # Step 2: Apply deterministic matcher and judge the response
+                matcher = evaluate_matcher(
+                    item.prompt,
+                    response_text,
+                    item.expected_output,
+                    item.matcher_type,
+                    item.matcher_config,
+                )
+                trace_data["matcher_type"] = matcher.matcher_type
+                trace_data["matcher_passed"] = matcher.passed
+                trace_data["matcher_score"] = matcher.score
+                trace_data["matcher_reason"] = matcher.reason
+
+                scores = judge_response(
+                    item.prompt,
+                    response_text,
+                    item.expected_output,
+                    rubric_id=run.judge_rubric,
+                    judge_model=run.judge_model,
+                )
                 trace_data["accuracy_score"] = scores.get("accuracy_score", 0.0)
                 trace_data["hallucination_flag"] = scores.get("hallucination_detected", False)
                 trace_data["reasoning_quality"] = scores.get("reasoning_quality", "poor")
                 trace_data["relevance_score"] = scores.get("relevance_score", 0.0)
+                trace_data["judge_confidence"] = scores.get("confidence")
+                trace_data["judge_explanation"] = scores.get("explanation")
                 trace_data["judge_prompt"] = scores.get("judge_prompt")
                 trace_data["judge_response"] = scores.get("raw_judge_response")
+                trace_data["judge_model"] = scores.get("judge_model")
+                trace_data["judge_rubric"] = scores.get("judge_rubric")
 
                 # Step 3: Token cost (Calculate exact via pricing mapping)
                 trace_data["token_cost"] = calculate_cost(trace_data["model_name"], usage)
@@ -211,12 +213,15 @@ def run_evaluation(db: Session, run: EvaluationRun):
             except Exception as item_expr:
                 trace_data["status"] = "failed"
                 trace_data["error_message"] = str(item_expr)
+                trace_data["failure_category"] = _classify_failure(str(item_expr))
                 logger.error(f"Failed evaluating item {item.id}: {item_expr}")
 
             # Step 4: Create result record
             result = EvaluationResult(**trace_data)
             db.add(result)
             results.append(result)
+            run.progress_current += 1
+            db.flush()
 
         db.flush()
 
@@ -231,7 +236,8 @@ def run_evaluation(db: Session, run: EvaluationRun):
         run.failed_runs = summary["failed_runs"]
         run.total_cost = summary["total_cost"]
         run.total_items = summary["total_items"]
-        run.status = "completed"
+        if run.status != "cancelled":
+            run.status = "completed"
         run.completed_at = datetime.now(timezone.utc)
         db.commit()
 
@@ -239,3 +245,16 @@ def run_evaluation(db: Session, run: EvaluationRun):
         run.status = "failed"
         db.commit()
         raise e
+
+
+def _classify_failure(message: str) -> str:
+    lowered = message.lower()
+    if "rate" in lowered or "429" in lowered:
+        return "rate_limit"
+    if "timeout" in lowered:
+        return "timeout"
+    if "api_key" in lowered or "authorization" in lowered:
+        return "auth"
+    if "json" in lowered:
+        return "configuration"
+    return "provider_error"

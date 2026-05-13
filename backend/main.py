@@ -6,9 +6,11 @@ load_dotenv()
 
 from database import engine, Base
 from routers import systems, datasets, evaluations, experiments
+from services.migrations import run_migrations
 
 # Create all tables on startup
 Base.metadata.create_all(bind=engine)
+run_migrations(engine)
 
 app = FastAPI(
     title="AI Evaluation & Benchmarking Platform",

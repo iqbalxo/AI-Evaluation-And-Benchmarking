@@ -63,6 +63,21 @@ def test_add_dataset_items_batch():
     assert len(resp.json()) == 3
 
 
+def test_list_benchmark_suites():
+    resp = client.get("/api/datasets/benchmark-suites")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert any(s["id"] == "reasoning_smoke" for s in data)
+
+
+def test_create_benchmark_suite_dataset():
+    resp = client.post("/api/datasets/benchmark-suites/reasoning_smoke/create")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["benchmark_suite"] == "reasoning_smoke"
+    assert data["item_count"] >= 1
+
+
 # ── Evaluations ───────────────────────────────────────
 def test_trigger_evaluation():
     # Setup
@@ -84,10 +99,19 @@ def test_trigger_evaluation():
     resp = client.post("/api/evaluations/run", json={
         "system_id": system_id,
         "dataset_id": dataset_id,
+        "judge_rubric": "general_quality",
+        "model_config_json": "{\"temperature\":0}",
     })
     assert resp.status_code == 200
     data = resp.json()
     assert data["status"] in ["pending", "running", "completed"]
+
+
+def test_list_rubrics():
+    resp = client.get("/api/evaluations/rubrics")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert any(r["id"] == "general_quality" for r in data)
 
 
 def test_list_runs():
@@ -120,3 +144,9 @@ def test_create_experiment():
 def test_list_experiments():
     resp = client.get("/api/experiments/")
     assert resp.status_code == 200
+
+
+def test_leaderboard_endpoint():
+    resp = client.get("/api/experiments/analytics/leaderboard")
+    assert resp.status_code == 200
+    assert isinstance(resp.json(), list)
