@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getSystems, getDatasets, triggerRun, getRuns, getRunDetail } from '../api.js';
+import { getSystems, getDatasets, triggerRun, getRuns, getRunDetail, getRubrics, cancelRun } from '../api.js';
 import {
     RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
     ResponsiveContainer, Tooltip as ReTooltip,
@@ -9,14 +9,16 @@ export default function Evaluations() {
     const [systems, setSystems] = useState([]);
     const [datasets, setDatasets] = useState([]);
     const [runs, setRuns] = useState([]);
+    const [rubrics, setRubrics] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [form, setForm] = useState({ system_id: '', dataset_id: '' });
+    const [form, setForm] = useState({ system_id: '', dataset_id: '', judge_rubric: 'general_quality', model_config_json: '{"temperature":0,"timeout_seconds":30}' });
     const [submitting, setSubmitting] = useState(false);
     const [detail, setDetail] = useState(null);
 
     const load = async () => {
-        const [s, d, r] = await Promise.all([getSystems(), getDatasets(), getRuns()]);
+        const [s, d, r, rb] = await Promise.all([getSystems(), getDatasets(), getRuns(), getRubrics().catch(() => [])]);
         setSystems(s); setDatasets(d); setRuns(r);
+        setRubrics(rb);
         setLoading(false);
     };
     useEffect(() => { load(); }, []);
@@ -26,7 +28,12 @@ export default function Evaluations() {
         if (!form.system_id || !form.dataset_id) return;
         setSubmitting(true);
         try {
-            await triggerRun({ system_id: parseInt(form.system_id), dataset_id: parseInt(form.dataset_id) });
+            await triggerRun({
+                system_id: parseInt(form.system_id),
+                dataset_id: parseInt(form.dataset_id),
+                judge_rubric: form.judge_rubric,
+                model_config_json: form.model_config_json,
+            });
             // Wait a bit for background task, then refresh
             setTimeout(async () => {
                 await load();
@@ -41,6 +48,11 @@ export default function Evaluations() {
         if (detail?.id === runId) { setDetail(null); return; }
         const d = await getRunDetail(runId);
         setDetail(d);
+    };
+
+    const handleCancel = async (runId) => {
+        await cancelRun(runId);
+        await load();
     };
 
     if (loading) return <div className="spinner" />;
@@ -80,8 +92,20 @@ export default function Evaluations() {
                             </select>
                         </div>
                     </div>
+                    <div className="form-row">
+                        <div className="form-field">
+                            <label>Evaluation Rubric</label>
+                            <select value={form.judge_rubric} onChange={e => setForm({ ...form, judge_rubric: e.target.value })}>
+                                {rubrics.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                            </select>
+                        </div>
+                        <div className="form-field">
+                            <label>Deterministic Model Config JSON</label>
+                            <input value={form.model_config_json} onChange={e => setForm({ ...form, model_config_json: e.target.value })} placeholder='{"temperature":0,"timeout_seconds":30}' />
+                        </div>
+                    </div>
                     <button type="submit" className="btn btn-primary" disabled={submitting} id="btn-trigger-run">
-                        {submitting ? '⏳ Running evaluation…' : '🚀 Run Evaluation'}
+                        {submitting ? 'Running evaluation...' : 'Run Evaluation'}
                     </button>
                 </form>
             </div>
@@ -107,6 +131,7 @@ export default function Evaluations() {
                                     <th>Halluc. %</th>
                                     <th>Latency</th>
                                     <th>Cost</th>
+                                    <th>Progress</th>
                                     <th>Items</th>
                                     <th></th>
                                 </tr>
@@ -123,13 +148,20 @@ export default function Evaluations() {
                                             <td>{r.hallucination_rate?.toFixed(1) ?? '—'}%</td>
                                             <td>{r.avg_latency_ms?.toFixed(0) ?? '—'} ms</td>
                                             <td>${r.total_cost?.toFixed(4) ?? '—'}</td>
+                                            <td>{r.progress_total ? `${r.progress_current || 0}/${r.progress_total}` : '—'}</td>
                                             <td>{r.total_items}</td>
-                                            <td><button className="btn btn-outline btn-sm">{detail?.id === r.id ? '▲' : '▼'}</button></td>
+                                            <td style={{ display: 'flex', gap: 6 }}>
+                                                {['pending', 'running'].includes(r.status) && <button className="btn btn-danger btn-sm" onClick={(e) => { e.stopPropagation(); handleCancel(r.id); }}>Cancel</button>}
+                                                <button className="btn btn-outline btn-sm">{detail?.id === r.id ? '▲' : '▼'}</button>
+                                            </td>
                                         </tr>
                                         {detail?.id === r.id && (
                                             <tr>
-                                                <td colSpan={10} style={{ padding: 0, border: 'none' }}>
+                                                <td colSpan={11} style={{ padding: 0, border: 'none' }}>
                                                     <div className="details-panel" style={{ margin: '0 8px 8px' }}>
+                                                        <div style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginBottom: 12 }}>
+                                                            Judge: {detail.judge_model || 'default'} • Rubric: {detail.judge_rubric || 'general_quality'} • Trace: {detail.trace_id || '—'}
+                                                        </div>
                                                         {/* Radar Chart */}
                                                         <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
                                                             <div style={{ flex: '0 0 300px' }}>

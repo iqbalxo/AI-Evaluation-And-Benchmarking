@@ -25,6 +25,9 @@ class EvaluationDataset(Base):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
     description = Column(Text, default="")
+    tags = Column(Text, default="[]")
+    schema_version = Column(Integer, default=1)
+    benchmark_suite = Column(String(100), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     items = relationship("DatasetItem", back_populates="dataset", cascade="all, delete-orphan")
@@ -40,6 +43,8 @@ class DatasetItem(Base):
     expected_output = Column(Text, nullable=False)
     evaluation_type = Column(String(100), default="question_answering")
     difficulty = Column(String(50), default="medium")
+    matcher_type = Column(String(50), default="judge")
+    matcher_config = Column(Text, default="{}")
 
     dataset = relationship("EvaluationDataset", back_populates="items")
     results = relationship("EvaluationResult", back_populates="item")
@@ -68,6 +73,15 @@ class EvaluationRun(Base):
     total_items = Column(Integer, default=0)
     successful_runs = Column(Integer, default=0)
     failed_runs = Column(Integer, default=0)
+    judge_model = Column(String(255), nullable=True)
+    judge_rubric = Column(String(100), default="general_quality")
+    model_config_json = Column(Text, default="{}")
+    progress_current = Column(Integer, default=0)
+    progress_total = Column(Integer, default=0)
+    cancellation_requested = Column(Boolean, default=False)
+    baseline_run_id = Column(Integer, nullable=True)
+    thresholds_json = Column(Text, default="{}")
+    trace_id = Column(String(64), nullable=True)
 
     system = relationship("AISystem", back_populates="evaluation_runs")
     dataset = relationship("EvaluationDataset", back_populates="evaluation_runs")
@@ -89,6 +103,14 @@ class EvaluationResult(Base):
     response = Column(Text, default="")
     judge_prompt = Column(Text, nullable=True)
     judge_response = Column(Text, nullable=True)
+    judge_model = Column(String(255), nullable=True)
+    judge_rubric = Column(String(100), nullable=True)
+    judge_confidence = Column(Float, nullable=True)
+    judge_explanation = Column(Text, nullable=True)
+    matcher_type = Column(String(50), nullable=True)
+    matcher_passed = Column(Boolean, nullable=True)
+    matcher_score = Column(Float, nullable=True)
+    matcher_reason = Column(Text, nullable=True)
     
     # Metrics
     accuracy_score = Column(Float, nullable=True)
@@ -102,6 +124,10 @@ class EvaluationResult(Base):
     # Status
     status = Column(String(50), default="success")  # success, failed
     error_message = Column(Text, nullable=True)
+    failure_category = Column(String(100), nullable=True)
+    trace_id = Column(String(64), nullable=True)
+    model_temperature = Column(Float, nullable=True)
+    model_timeout_ms = Column(Float, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     run = relationship("EvaluationRun", back_populates="results")

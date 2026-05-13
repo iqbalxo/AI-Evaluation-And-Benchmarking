@@ -12,6 +12,7 @@ import httpx
 import logging
 
 from services.model_catalog import DEFAULT_JUDGE_MODEL_ID
+from services.rubrics import DEFAULT_RUBRIC_ID, format_rubric_for_prompt, get_rubric
 
 logger = logging.getLogger(__name__)
 
@@ -78,7 +79,8 @@ def _fuzzy_token_overlap(expected_tokens: set[str], response_tokens: set[str]) -
 
 
 def judge_response(prompt: str, response: str, expected_output: str,
-                   *, force_fallback: bool = False) -> dict:
+                   *, force_fallback: bool = False, rubric_id: str | None = None,
+                   judge_model: str | None = None) -> dict:
     """
     Score a single AI response against the expected output using an LLM.
 
@@ -88,8 +90,13 @@ def judge_response(prompt: str, response: str, expected_output: str,
       - reasoning_quality (excellent|good|fair|poor)
       - relevance_score (0-10)
     """
-    judge_prompt = f"""You are an expert AI evaluator. 
+    rubric = get_rubric(rubric_id)
+    rubric_text = format_rubric_for_prompt(rubric)
+    selected_judge_model = (judge_model or os.getenv("OPENROUTER_JUDGE_MODEL", DEFAULT_JUDGE_MODEL_ID)).strip() or DEFAULT_JUDGE_MODEL_ID
+    judge_prompt = f"""You are an expert AI evaluator.
 Given a prompt, an expected correct answer, and an AI's actual response, evaluate the response.
+
+{rubric_text}
 
 Prompt: {prompt}
 Expected Answer: {expected_output}
@@ -100,7 +107,9 @@ Output ONLY a JSON object with the following schema:
   "accuracy_score": <float 1-10>,
   "hallucination_detected": <boolean>,
   "reasoning_quality": "<excellent|good|fair|poor>",
-  "relevance_score": <float 0-10>
+  "relevance_score": <float 0-10>,
+  "confidence": <float 0-1>,
+  "explanation": "<one concise sentence explaining the score>"
 }}
 
 Rules:
@@ -108,6 +117,8 @@ Rules:
 - Hallucination (bool): ONLY set to true if the AI introduces false, unfactual, or completely unfounded information. Do NOT set to true for harmless extra wording, elaborations, formatting, or correct additional context.
 - Reasoning (string): Choose one of excellent, good, fair, poor.
 - Relevance (0-10): How direct and relevant is the answer to the prompt?
+- Confidence (0-1): How confident you are in the evaluation.
+- Explanation: Keep this to one concise sentence.
 """
 
     print("\n" + "=" * 40, flush=True)
@@ -122,6 +133,8 @@ Rules:
         print("--- FORCED FALLBACK MODE ---", flush=True)
         scores = _fallback_judge(prompt, response, expected_output)
         scores["judge_prompt"] = judge_prompt
+        scores["judge_model"] = "fallback"
+        scores["judge_rubric"] = rubric.id
         print(f"--- PARSED SCORES (fallback) ---\n{scores}\n" + "=" * 40 + "\n", flush=True)
         return scores
 
@@ -130,10 +143,11 @@ Rules:
         print("OPENROUTER_API_KEY not set for Judge — using fallback.", flush=True)
         scores = _fallback_judge(prompt, response, expected_output)
         scores["judge_prompt"] = judge_prompt
+        scores["judge_model"] = "fallback"
+        scores["judge_rubric"] = rubric.id
         print(f"--- PARSED SCORES (fallback) ---\n{scores}\n" + "=" * 40 + "\n", flush=True)
         return scores
 
-    judge_model = os.getenv("OPENROUTER_JUDGE_MODEL", DEFAULT_JUDGE_MODEL_ID).strip() or DEFAULT_JUDGE_MODEL_ID
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -142,7 +156,7 @@ Rules:
         "X-Title": os.getenv("OPENROUTER_APP_NAME", "AI Evaluation Platform"),
     }
     payload = {
-        "model": judge_model,
+        "model": selected_judge_model,
         "messages": [{"role": "user", "content": judge_prompt}],
         "temperature": 0,
     }
@@ -156,7 +170,7 @@ Rules:
                 res.raise_for_status()
                 data = res.json()
                 raw_judge_text = data["choices"][0]["message"]["content"]
-                print(f"--- RAW JUDGE RESPONSE [{judge_model}] (attempt {attempt}) ---\n{raw_judge_text}\n", flush=True)
+                print(f"--- RAW JUDGE RESPONSE [{selected_judge_model}] (attempt {attempt}) ---\n{raw_judge_text}\n", flush=True)
 
                 # Extract JSON block if surrounded by markdown or extra text
                 clean_text = raw_judge_text.strip()
@@ -170,14 +184,20 @@ Rules:
                 hal = bool(parsed.get("hallucination_detected", False))
                 rea = str(parsed.get("reasoning_quality", "poor")).lower()
                 rel = float(parsed.get("relevance_score", 0.0))
+                conf = float(parsed.get("confidence", 0.7))
+                explanation = str(parsed.get("explanation", "")).strip()
 
                 final_scores = {
                     "accuracy_score": acc,
                     "hallucination_detected": hal,
                     "reasoning_quality": rea,
                     "relevance_score": rel,
+                    "confidence": max(0.0, min(1.0, conf)),
+                    "explanation": explanation,
                     "judge_prompt": judge_prompt,
                     "raw_judge_response": raw_judge_text,
+                    "judge_model": selected_judge_model,
+                    "judge_rubric": rubric.id,
                 }
                 print(f"--- PARSED SCORES ---\n{final_scores}\n" + "=" * 40 + "\n", flush=True)
                 return final_scores
@@ -196,6 +216,8 @@ Rules:
     scores = _fallback_judge(prompt, response, expected_output)
     scores["judge_prompt"] = judge_prompt
     scores["raw_judge_response"] = f"API Error: {last_error}. Used fallback judge."
+    scores["judge_model"] = "fallback"
+    scores["judge_rubric"] = rubric.id
     print(f"--- PARSED SCORES (fallback) ---\n{scores}\n" + "=" * 40 + "\n", flush=True)
     return scores
 
@@ -287,5 +309,85 @@ def _fallback_judge(prompt: str, response: str, expected_output: str) -> dict:
         "hallucination_detected": hallucination,
         "reasoning_quality": reasoning,
         "relevance_score": relevance,
+        "confidence": 0.55,
+        "explanation": "Heuristic fallback used token overlap and fabrication-pattern checks.",
         "raw_judge_response": "Heuristic fallback judge executed."
     }
+
+
+def judge_pairwise(prompt: str, expected_output: str, response_a: str, response_b: str,
+                   *, rubric_id: str | None = None, judge_model: str | None = None,
+                   force_fallback: bool = False) -> dict:
+    rubric = get_rubric(rubric_id or DEFAULT_RUBRIC_ID)
+    if force_fallback or not os.getenv("OPENROUTER_API_KEY", ""):
+        score_a = _fallback_judge(prompt, response_a, expected_output)["accuracy_score"]
+        score_b = _fallback_judge(prompt, response_b, expected_output)["accuracy_score"]
+        if score_a == score_b:
+            winner = "tie"
+        else:
+            winner = "a" if score_a > score_b else "b"
+        return {
+            "winner": winner,
+            "confidence": 0.55,
+            "explanation": "Fallback pairwise comparison used heuristic accuracy scores.",
+            "judge_model": "fallback",
+            "judge_rubric": rubric.id,
+        }
+
+    selected_judge_model = (judge_model or os.getenv("OPENROUTER_JUDGE_MODEL", DEFAULT_JUDGE_MODEL_ID)).strip() or DEFAULT_JUDGE_MODEL_ID
+    judge_prompt = f"""You are comparing two anonymized model answers for the same evaluation item.
+
+{format_rubric_for_prompt(rubric)}
+
+Prompt: {prompt}
+Expected Answer: {expected_output}
+
+Answer A: {response_a}
+Answer B: {response_b}
+
+Output ONLY JSON:
+{{
+  "winner": "<a|b|tie>",
+  "confidence": <float 0-1>,
+  "explanation": "<one concise sentence>"
+}}
+"""
+    payload = {
+        "model": selected_judge_model,
+        "messages": [{"role": "user", "content": judge_prompt}],
+        "temperature": 0,
+    }
+    headers = {
+        "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": os.getenv("OPENROUTER_SITE_URL", "http://localhost:5173"),
+        "X-Title": os.getenv("OPENROUTER_APP_NAME", "AI Evaluation Platform"),
+    }
+    try:
+        with httpx.Client(timeout=45.0) as client:
+            res = client.post("https://openrouter.ai/api/v1/chat/completions", headers=headers, json=payload)
+            res.raise_for_status()
+            raw_text = res.json()["choices"][0]["message"]["content"]
+        clean_text = raw_text.strip()
+        match = re.search(r"\{.*\}", clean_text, re.DOTALL)
+        if match:
+            clean_text = match.group(0)
+        parsed = json.loads(clean_text)
+        winner = str(parsed.get("winner", "tie")).lower()
+        if winner not in {"a", "b", "tie"}:
+            winner = "tie"
+        return {
+            "winner": winner,
+            "confidence": max(0.0, min(1.0, float(parsed.get("confidence", 0.7)))),
+            "explanation": str(parsed.get("explanation", "")).strip(),
+            "judge_model": selected_judge_model,
+            "judge_rubric": rubric.id,
+        }
+    except Exception as exc:
+        return {
+            "winner": "tie",
+            "confidence": 0.0,
+            "explanation": f"Pairwise judge failed: {exc}",
+            "judge_model": selected_judge_model,
+            "judge_rubric": rubric.id,
+        }

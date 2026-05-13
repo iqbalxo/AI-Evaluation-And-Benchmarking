@@ -122,6 +122,9 @@ export default function RunTracing() {
                                                                                         <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#94a3b8', marginBottom: '4px' }}>Model Context</div>
                                                                                         <div style={{ background: '#0f172a', padding: '10px', borderRadius: '6px', fontSize: '0.85rem', color: '#cbd5e1' }}>
                                                                                             <strong>{trace.provider_name || 'System'}: </strong> {trace.model_name || 'Unknown'}
+                                                                                            <div style={{ marginTop: 6, color: '#94a3b8' }}>
+                                                                                                Temp: {trace.model_temperature ?? 'default'} • Timeout: {trace.model_timeout_ms ? `${trace.model_timeout_ms.toFixed(0)} ms` : 'default'}
+                                                                                            </div>
                                                                                         </div>
                                                                                     </div>
 
@@ -156,6 +159,23 @@ export default function RunTracing() {
 
                                                                                 {/* Right Column: Judge Trace */}
                                                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                                                    <div>
+                                                                                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8b5cf6', marginBottom: '4px' }}>Judge Metadata</div>
+                                                                                        <div style={{ background: '#1e1b4b', border: '1px solid rgba(139, 92, 246, 0.2)', padding: '10px', borderRadius: '6px', fontSize: '0.85rem', color: '#c4b5fd' }}>
+                                                                                            Model: {trace.judge_model || '—'}<br />
+                                                                                            Rubric: {trace.judge_rubric || '—'}<br />
+                                                                                            Confidence: {trace.judge_confidence != null ? trace.judge_confidence.toFixed(2) : '—'}<br />
+                                                                                            Explanation: {trace.judge_explanation || '—'}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                    <div>
+                                                                                        <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#06b6d4', marginBottom: '4px' }}>Answer Matcher</div>
+                                                                                        <div style={{ background: '#082f49', border: '1px solid rgba(6, 182, 212, 0.2)', padding: '10px', borderRadius: '6px', fontSize: '0.85rem', color: '#bae6fd' }}>
+                                                                                            {trace.matcher_type || 'judge'} • {trace.matcher_passed == null ? 'judge-only' : trace.matcher_passed ? 'passed' : 'failed'}
+                                                                                            {trace.matcher_score != null && ` • score ${trace.matcher_score}`}
+                                                                                            <div style={{ color: '#7dd3fc', marginTop: 4 }}>{trace.matcher_reason || '—'}</div>
+                                                                                        </div>
+                                                                                    </div>
                                                                                     <div>
                                                                                         <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8b5cf6', marginBottom: '4px' }}>Judge Evaluation Prompt</div>
                                                                                         <pre style={{ background: '#1e1b4b', border: '1px solid rgba(139, 92, 246, 0.2)', padding: '10px', borderRadius: '6px', fontSize: '0.75rem', color: '#c4b5fd', whiteSpace: 'pre-wrap', maxHeight: '250px', overflowY: 'auto' }}>

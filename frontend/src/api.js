@@ -54,9 +54,19 @@ export const triggerRun = (data) => request('/evaluations/run', { method: 'POST'
 export const getRuns = () => request('/evaluations/runs');
 export const getRunDetail = (id) => request(`/evaluations/runs/${id}`);
 export const getStats = () => request('/evaluations/stats');
+export const getRubrics = () => request('/evaluations/rubrics');
+export const cancelRun = (id) => request(`/evaluations/runs/${id}/cancel`, { method: 'POST' });
 
 // ── Experiments ──
 export const getExperiments = () => request('/experiments/');
 export const createExperiment = (data) => request('/experiments/', { method: 'POST', body: data });
 export const compareExperiment = (id) => request(`/experiments/${id}/compare`);
 export const deleteExperiment = (id) => request(`/experiments/${id}`, { method: 'DELETE' });
+export const getLeaderboard = () => request('/experiments/analytics/leaderboard');
+export const getRegressionReport = (baselineId, candidateId) => request(`/experiments/analytics/regression?baseline_run_id=${baselineId}&candidate_run_id=${candidateId}`);
+export const pairwiseCompare = (data) => request('/experiments/pairwise', { method: 'POST', body: data });
+export const exportExperimentUrl = (id, format = 'csv') => `/api/experiments/${id}/export?format=${format}`;
+
+// ── Benchmark Suites ──
+export const getBenchmarkSuites = () => request('/datasets/benchmark-suites');
+export const createBenchmarkSuiteDataset = (suiteId) => request(`/datasets/benchmark-suites/${suiteId}/create`, { method: 'POST' });

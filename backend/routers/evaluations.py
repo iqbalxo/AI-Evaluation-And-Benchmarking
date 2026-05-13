@@ -4,8 +4,9 @@ from typing import List
 
 from database import get_db, SessionLocal
 from models import EvaluationRun, AISystem, EvaluationDataset
-from schemas import EvaluationRunCreate, EvaluationRunOut, EvaluationRunDetail, EvaluationResultOut
+from schemas import EvaluationRunCreate, EvaluationRunOut, EvaluationRunDetail, EvaluationResultOut, RubricOut
 from services.evaluation_engine import run_evaluation
+from services.rubrics import list_rubrics
 
 router = APIRouter(prefix="/api/evaluations", tags=["Evaluations"])
 
@@ -39,6 +40,11 @@ def trigger_evaluation(payload: EvaluationRunCreate, background: BackgroundTasks
         system_name=system.name,
         provider=system.provider,
         tier=system.tier,
+        judge_model=payload.judge_model,
+        judge_rubric=payload.judge_rubric,
+        model_config_json=payload.model_config_json,
+        baseline_run_id=payload.baseline_run_id,
+        thresholds_json=payload.thresholds_json,
         status="pending"
     )
     db.add(run)
@@ -55,6 +61,11 @@ def trigger_evaluation(payload: EvaluationRunCreate, background: BackgroundTasks
     kwargs["dataset_name"] = run.dataset.name if run.dataset else None
     
     return EvaluationRunOut(**kwargs)
+
+
+@router.get("/rubrics", response_model=List[RubricOut])
+def get_rubrics():
+    return list_rubrics()
 
 
 @router.get("/runs", response_model=List[EvaluationRunOut])
@@ -86,6 +97,18 @@ def get_run(run_id: int, db: Session = Depends(get_db)):
         **kwargs,
         results=[EvaluationResultOut.model_validate(res) for res in r.results],
     )
+
+
+@router.post("/runs/{run_id}/cancel")
+def cancel_run(run_id: int, db: Session = Depends(get_db)):
+    run = db.query(EvaluationRun).filter(EvaluationRun.id == run_id).first()
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+    run.cancellation_requested = True
+    if run.status == "pending":
+        run.status = "cancelled"
+    db.commit()
+    return {"detail": "Cancellation requested", "run_id": run_id}
 
 
 @router.get("/stats")
