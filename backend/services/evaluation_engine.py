@@ -10,6 +10,7 @@ Orchestrates the full evaluation pipeline:
 import random
 import time
 import os
+import json
 import httpx
 import logging
 from datetime import datetime, timezone
@@ -62,22 +63,40 @@ def _simulate_ai_response(prompt: str, expected_output: str) -> tuple[str, float
     return response, latency_ms, token_usage
 
 
-def _get_openrouter_response(prompt: str, model_id: str) -> tuple[str, float]:
+def _load_system_config(config_json: str | None) -> dict:
+    if not config_json:
+        return {}
+
+    try:
+        parsed = json.loads(config_json)
+    except json.JSONDecodeError as exc:
+        raise ValueError("System config_json must be valid JSON") from exc
+
+    if not isinstance(parsed, dict):
+        raise ValueError("System config_json must be a JSON object")
+
+    return parsed
+
+
+def _get_openrouter_response(prompt: str, model_id: str, config: dict | None = None) -> tuple[str, float, int]:
     """
     Call OpenRouter API to get a real response.
-    Returns (response_text, latency_ms).
+    Returns (response_text, latency_ms, token_usage).
     """
+    if not model_id:
+        raise ValueError("OpenRouter model id is required")
+
     api_key = os.getenv("OPENROUTER_API_KEY", "")
     if not api_key:
         print("OPENROUTER_API_KEY not set", flush=True)
-        raise ValueError("OPENROUTER_API_KEY not set")
+        raise ValueError("OPENROUTER_API_KEY is not set; add it to .env or your shell environment")
 
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:8000",
-        "X-Title": "AI Evaluation Platform"
+        "HTTP-Referer": os.getenv("OPENROUTER_SITE_URL", "http://localhost:5173"),
+        "X-Title": os.getenv("OPENROUTER_APP_NAME", "AI Evaluation Platform"),
     }
 
     payload = {
@@ -86,6 +105,10 @@ def _get_openrouter_response(prompt: str, model_id: str) -> tuple[str, float]:
             {"role": "user", "content": prompt}
         ]
     }
+    config = config or {}
+    for key in ("temperature", "max_tokens", "top_p"):
+        if key in config and config[key] not in (None, ""):
+            payload[key] = config[key]
 
     start_time = time.time()
     try:
@@ -104,21 +127,22 @@ def _get_openrouter_response(prompt: str, model_id: str) -> tuple[str, float]:
                 usage = data.get("usage", {}).get("total_tokens", 0)
                 print(f"[LIVE EVAL] OpenRouter [{model_id}] text: {text}", flush=True)
                 print(f"[LIVE EVAL] Usage: {usage} tokens", flush=True)
-                
+
                 # Check for rate limiting or other provider hints in the usage details
                 if "provider_response" in data:
                     print(f"[LIVE EVAL] Provider Response context: {data['provider_response']}", flush=True)
-                    
+
                 return text, latency_ms, usage
             print(f"[LIVE EVAL] Empty response from OpenRouter: {data}", flush=True)
             raise ValueError("Empty response from OpenRouter")
     except httpx.HTTPStatusError as e:
         print(f"HTTPStatusError calling OpenRouter: {e.response.status_code} - {e.response.text}", flush=True)
-        raise
+        detail = e.response.text[:500] if e.response is not None else str(e)
+        raise ValueError(
+            f"OpenRouter request failed for {model_id}: HTTP {e.response.status_code} - {detail}"
+        ) from e
     except Exception as e:
         print(f"Error calling OpenRouter: {str(e)}", flush=True)
-        import traceback
-        traceback.print_exc()
         raise
 
 
@@ -163,7 +187,8 @@ def run_evaluation(db: Session, run: EvaluationRun):
                 # Step 1: Get AI response
                 if run.system.model_type == "openrouter":
                     model_id = run.system.api_endpoint or run.system.name
-                    response_text, latency, usage = _get_openrouter_response(item.prompt, model_id)
+                    config = _load_system_config(run.system.config_json)
+                    response_text, latency, usage = _get_openrouter_response(item.prompt, model_id, config)
                 else:
                     response_text, latency, usage = _simulate_ai_response(item.prompt, item.expected_output)
 

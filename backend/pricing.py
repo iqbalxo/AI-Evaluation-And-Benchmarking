@@ -17,6 +17,7 @@ MODEL_PRICING_PER_1M = {
     
     # Anthropic
     "anthropic/claude-3-5-sonnet": 9.00,  # ~$3 IN / $15 OUT
+    "anthropic/claude-3.5-sonnet": 9.00,  # Legacy seeded ID format
     "anthropic/claude-3-haiku": 0.75,     # ~$0.25 IN / $1.25 OUT
     
     # Google
@@ -26,6 +27,7 @@ MODEL_PRICING_PER_1M = {
     # Meta / Open Source
     "meta-llama/llama-3.1-70b-instruct": 0.70,
     "meta-llama/llama-3.1-8b-instruct": 0.10,
+    "mistralai/mistral-nemo": 0.25,
     
     # OpenRouter free tier
     "openrouter/free": 0.0,

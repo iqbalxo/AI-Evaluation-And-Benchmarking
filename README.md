@@ -104,14 +104,18 @@ cd backend
 pip install -r requirements.txt
 ```
 
-3. **Set environment variable**
+3. **Set environment variables**
 ```bash
 # On Linux/macOS
 export OPENROUTER_API_KEY="your_key_here"
+export OPENROUTER_JUDGE_MODEL="openai/gpt-4o-mini"
 
 # On Windows PowerShell
 $env:OPENROUTER_API_KEY="your_key_here"
+$env:OPENROUTER_JUDGE_MODEL="openai/gpt-4o-mini"
 ```
+
+You can also place these values in a local `.env` file at the repository root. `OPENROUTER_JUDGE_MODEL` is optional and defaults to the balanced `openai/gpt-4o-mini` judge.
 
 4. **Start the backend server**
 ```bash
@@ -124,6 +128,16 @@ cd frontend
 npm install
 npm run dev
 ```
+
+6. **Register a model**
+
+Open the AI Systems page and choose one of the balanced OpenRouter presets. The default preset is `openai/gpt-4o-mini`; custom OpenRouter model IDs are still supported for advanced comparisons.
+
+## OpenRouter Model Presets
+
+The backend exposes the model catalog at `GET /api/systems/model-presets`. The Systems UI uses this endpoint to populate balanced, premium, budget, and free model choices with provider, tier, and cost hints.
+
+The LLM judge now uses `OPENROUTER_JUDGE_MODEL` instead of the previous free model fallback. If the OpenRouter call fails or no key is available, the local heuristic judge still keeps evaluations from crashing.
 
 ## Validation Suite
 

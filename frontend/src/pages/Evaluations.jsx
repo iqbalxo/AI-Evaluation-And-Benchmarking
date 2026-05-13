@@ -69,7 +69,7 @@ export default function Evaluations() {
                             <label>AI System</label>
                             <select value={form.system_id} onChange={e => setForm({ ...form, system_id: e.target.value })} required id="select-system">
                                 <option value="">Select a system…</option>
-                                {systems.map(s => <option key={s.id} value={s.id}>{s.name} ({s.model_type})</option>)}
+                                {systems.map(s => <option key={s.id} value={s.id}>{s.name} ({s.api_endpoint || s.provider || s.model_type})</option>)}
                             </select>
                         </div>
                         <div className="form-field">

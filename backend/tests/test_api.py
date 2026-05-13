@@ -31,6 +31,14 @@ def test_list_systems():
     assert isinstance(resp.json(), list)
 
 
+def test_list_model_presets():
+    resp = client.get("/api/systems/model-presets")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert any(p["id"] == "openai/gpt-4o-mini" for p in data)
+    assert all("recommended_for" in p for p in data)
+
+
 # ── Datasets ──────────────────────────────────────────
 def test_create_dataset():
     resp = client.post("/api/datasets/", json={

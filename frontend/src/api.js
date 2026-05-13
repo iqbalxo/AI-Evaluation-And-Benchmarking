@@ -26,6 +26,7 @@ async function request(path, opts = {}) {
 export const getSystems = () => request('/systems/');
 export const createSystem = (data) => request('/systems/', { method: 'POST', body: data });
 export const deleteSystem = (id) => request(`/systems/${id}`, { method: 'DELETE' });
+export const getModelPresets = () => request('/systems/model-presets');
 
 // ── Datasets ──
 export const getDatasets = () => request('/datasets/');

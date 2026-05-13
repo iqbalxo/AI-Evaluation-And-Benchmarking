@@ -11,6 +11,8 @@ import time
 import httpx
 import logging
 
+from services.model_catalog import DEFAULT_JUDGE_MODEL_ID
+
 logger = logging.getLogger(__name__)
 
 # Patterns that strongly indicate fabricated / hallucinated content
@@ -131,14 +133,18 @@ Rules:
         print(f"--- PARSED SCORES (fallback) ---\n{scores}\n" + "=" * 40 + "\n", flush=True)
         return scores
 
+    judge_model = os.getenv("OPENROUTER_JUDGE_MODEL", DEFAULT_JUDGE_MODEL_ID).strip() or DEFAULT_JUDGE_MODEL_ID
     url = "https://openrouter.ai/api/v1/chat/completions"
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
+        "HTTP-Referer": os.getenv("OPENROUTER_SITE_URL", "http://localhost:5173"),
+        "X-Title": os.getenv("OPENROUTER_APP_NAME", "AI Evaluation Platform"),
     }
     payload = {
-        "model": "openrouter/free",
+        "model": judge_model,
         "messages": [{"role": "user", "content": judge_prompt}],
+        "temperature": 0,
     }
 
     # ── Retry loop ────────────────────────────────────────
@@ -150,7 +156,7 @@ Rules:
                 res.raise_for_status()
                 data = res.json()
                 raw_judge_text = data["choices"][0]["message"]["content"]
-                print(f"--- RAW JUDGE RESPONSE (attempt {attempt}) ---\n{raw_judge_text}\n", flush=True)
+                print(f"--- RAW JUDGE RESPONSE [{judge_model}] (attempt {attempt}) ---\n{raw_judge_text}\n", flush=True)
 
                 # Extract JSON block if surrounded by markdown or extra text
                 clean_text = raw_judge_text.strip()

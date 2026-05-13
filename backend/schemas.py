@@ -27,6 +27,16 @@ class AISystemOut(BaseModel):
         from_attributes = True
 
 
+class ModelPresetOut(BaseModel):
+    id: str
+    name: str
+    provider: str
+    tier: str
+    quality: str
+    cost_profile: str
+    recommended_for: str
+
+
 # ── Dataset ────────────────────────────────────────────
 class DatasetItemCreate(BaseModel):
     prompt: str
