@@ -52,6 +52,31 @@ def calc_avg_token_usage(results: list) -> float:
     return round(sum(valid) / len(valid), 2)
 
 
+def calc_p95_latency(results: list) -> float:
+    valid = sorted(_get_valid(results, "latency_ms"))
+    if not valid:
+        return 0.0
+    idx = min(len(valid) - 1, int(round((len(valid) - 1) * 0.95)))
+    return round(valid[idx], 2)
+
+
+def calc_pass_rate(results: list) -> float:
+    successful = [r for r in results if r.status == "success"]
+    if not successful:
+        return 0.0
+    passed = sum(1 for r in successful if (r.accuracy_score or 0) >= 7 and not r.hallucination_flag)
+    return round(passed / len(successful) * 100, 2)
+
+
+def calc_cost_per_correct(results: list) -> float | None:
+    successful = [r for r in results if r.status == "success"]
+    correct = sum(1 for r in successful if (r.accuracy_score or 0) >= 7 and not r.hallucination_flag)
+    if correct == 0:
+        return None
+    total_cost = sum((r.token_cost or 0.0) for r in successful)
+    return round(total_cost / correct, 6)
+
+
 def calc_successful_runs(results: list) -> int:
     return sum(1 for r in results if r.status == "success")
 
@@ -69,6 +94,9 @@ def compute_run_summary(results: list) -> dict:
         "total_cost": calc_total_cost(results),
         "avg_relevance": calc_avg_relevance(results),
         "avg_token_usage": calc_avg_token_usage(results),
+        "p95_latency_ms": calc_p95_latency(results),
+        "pass_rate": calc_pass_rate(results),
+        "cost_per_correct": calc_cost_per_correct(results),
         "successful_runs": calc_successful_runs(results),
         "failed_runs": calc_failed_runs(results),
         "total_items": len(results),

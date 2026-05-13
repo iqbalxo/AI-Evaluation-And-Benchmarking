@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getExperiments, createExperiment, deleteExperiment, compareExperiment, getRuns } from '../api.js';
+import { getExperiments, createExperiment, deleteExperiment, compareExperiment, getRuns, getLeaderboard, getRegressionReport, pairwiseCompare, exportExperimentUrl } from '../api.js';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as ReTooltip,
     ResponsiveContainer, Legend, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
@@ -14,10 +14,14 @@ export default function Experiments() {
     const [form, setForm] = useState({ name: '', description: '', run_ids: [] });
     const [comparison, setComparison] = useState(null);
     const [activeExp, setActiveExp] = useState(null);
+    const [leaderboard, setLeaderboard] = useState([]);
+    const [regression, setRegression] = useState(null);
+    const [pairwise, setPairwise] = useState(null);
 
     const load = async () => {
-        const [e, r] = await Promise.all([getExperiments(), getRuns()]);
+        const [e, r, lb] = await Promise.all([getExperiments(), getRuns(), getLeaderboard().catch(() => [])]);
         setExperiments(e); setRuns(r.filter(run => run.status === 'completed'));
+        setLeaderboard(lb);
         setLoading(false);
     };
     useEffect(() => { load(); }, []);
@@ -48,6 +52,20 @@ export default function Experiments() {
         await deleteExperiment(id);
         if (activeExp === id) { setActiveExp(null); setComparison(null); }
         await load();
+    };
+
+    const handleRegression = async () => {
+        if (!comparison?.runs || comparison.runs.length < 2) return;
+        const [baseline, candidate] = comparison.runs;
+        const report = await getRegressionReport(baseline.id, candidate.id);
+        setRegression(report);
+    };
+
+    const handlePairwise = async () => {
+        if (!comparison?.runs || comparison.runs.length < 2) return;
+        const [runA, runB] = comparison.runs;
+        const report = await pairwiseCompare({ run_a_id: runA.id, run_b_id: runB.id });
+        setPairwise(report);
     };
 
     if (loading) return <div className="spinner" />;
@@ -125,6 +143,40 @@ export default function Experiments() {
                 </form>
             </div>
 
+            {leaderboard.length > 0 && (
+                <div className="card section animate-in">
+                    <div className="chart-title">Model Leaderboard</div>
+                    <div className="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>System</th>
+                                    <th>Provider</th>
+                                    <th>Runs</th>
+                                    <th>Accuracy</th>
+                                    <th>Pass Rate</th>
+                                    <th>Cost / Correct</th>
+                                    <th>Latency</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {leaderboard.map(row => (
+                                    <tr key={row.system_name}>
+                                        <td style={{ color: 'var(--text-primary)', fontWeight: 600 }}>{row.system_name}</td>
+                                        <td>{row.provider || '—'}</td>
+                                        <td>{row.runs}</td>
+                                        <td>{row.avg_accuracy.toFixed(2)}</td>
+                                        <td>{row.pass_rate.toFixed(1)}%</td>
+                                        <td>{row.cost_per_correct != null ? `$${row.cost_per_correct.toFixed(6)}` : '—'}</td>
+                                        <td>{row.avg_latency_ms.toFixed(0)} ms</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
             {/* Experiment List */}
             {experiments.length > 0 && (
                 <div className="card section animate-in">
@@ -153,6 +205,8 @@ export default function Experiments() {
                                             <button className="btn btn-primary btn-sm" onClick={() => handleCompare(exp.id)}>
                                                 {activeExp === exp.id ? '▲ Hide' : '📊 Compare'}
                                             </button>
+                                            <a className="btn btn-outline btn-sm" href={exportExperimentUrl(exp.id, 'csv')}>CSV</a>
+                                            <a className="btn btn-outline btn-sm" href={exportExperimentUrl(exp.id, 'json')}>JSON</a>
                                             <button className="btn btn-danger btn-sm" onClick={() => handleDelete(exp.id)}>Delete</button>
                                         </td>
                                     </tr>
@@ -166,6 +220,27 @@ export default function Experiments() {
             {/* Comparison Results */}
             {comparison && activeExp && (
                 <div className="animate-in">
+                    <div className="card section">
+                        <div className="chart-title">Regression And Pairwise Analysis</div>
+                        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+                            <button className="btn btn-outline btn-sm" disabled={comparison.runs.length < 2} onClick={handleRegression}>Compare First Two Runs</button>
+                            <button className="btn btn-outline btn-sm" disabled={comparison.runs.length < 2} onClick={handlePairwise}>Blind Pairwise Judge</button>
+                        </div>
+                        {regression && (
+                            <div className="details-panel">
+                                <strong>Status: {regression.status}</strong>
+                                <div>Accuracy Δ: {regression.accuracy_delta} • Relevance Δ: {regression.relevance_delta} • Latency Δ: {regression.latency_delta_ms} ms • Cost Δ: ${regression.cost_delta}</div>
+                                <div style={{ color: 'var(--text-secondary)', marginTop: 6 }}>{regression.findings.join(' ')}</div>
+                            </div>
+                        )}
+                        {pairwise && (
+                            <div className="details-panel">
+                                <strong>Winner: {pairwise.winner}</strong>
+                                <div>Confidence: {pairwise.confidence.toFixed(2)} • Compared items: {pairwise.compared_items}</div>
+                                <div style={{ color: 'var(--text-secondary)', marginTop: 6 }}>{pairwise.explanation}</div>
+                            </div>
+                        )}
+                    </div>
                     {/* Bar Chart Comparison */}
                     <div className="card section">
                         <div className="chart-title">Metric Comparison — {comparison.experiment.name}</div>
