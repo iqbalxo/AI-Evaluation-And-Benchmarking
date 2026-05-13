@@ -1,24 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { getDatasets, createDataset, deleteDataset, getDatasetItems, addDatasetItem, uploadDataset } from '../api.js';
+import { getDatasets, createDataset, deleteDataset, getDatasetItems, addDatasetItem, uploadDataset, getBenchmarkSuites, createBenchmarkSuiteDataset } from '../api.js';
 
 export default function Datasets() {
     const [datasets, setDatasets] = useState([]);
+    const [benchmarkSuites, setBenchmarkSuites] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [form, setForm] = useState({ name: '', description: '' });
+    const [form, setForm] = useState({ name: '', description: '', tags: '[]' });
     const [expanded, setExpanded] = useState(null);
     const [items, setItems] = useState([]);
-    const [itemForm, setItemForm] = useState({ prompt: '', expected_output: '', evaluation_type: 'question_answering', difficulty: 'medium' });
+    const [itemForm, setItemForm] = useState({ prompt: '', expected_output: '', evaluation_type: 'question_answering', difficulty: 'medium', matcher_type: 'judge', matcher_config: '{}' });
     const [uploadFile, setUploadFile] = useState(null);
     const [uploading, setUploading] = useState(false);
 
-    const load = () => getDatasets().then(setDatasets).finally(() => setLoading(false));
+    const load = async () => {
+        const [datasetData, suiteData] = await Promise.all([getDatasets(), getBenchmarkSuites().catch(() => [])]);
+        setDatasets(datasetData);
+        setBenchmarkSuites(suiteData);
+        setLoading(false);
+    };
     useEffect(() => { load(); }, []);
 
     const handleCreateDataset = async (e) => {
         e.preventDefault();
         if (!form.name) return;
         await createDataset(form);
-        setForm({ name: '', description: '' });
+        setForm({ name: '', description: '', tags: '[]' });
+        await load();
+    };
+
+    const handleCreateSuite = async (suiteId) => {
+        await createBenchmarkSuiteDataset(suiteId);
         await load();
     };
 
@@ -49,7 +60,7 @@ export default function Datasets() {
         e.preventDefault();
         if (!itemForm.prompt || !itemForm.expected_output) return;
         await addDatasetItem(expanded, itemForm);
-        setItemForm({ prompt: '', expected_output: '', evaluation_type: 'question_answering', difficulty: 'medium' });
+        setItemForm({ prompt: '', expected_output: '', evaluation_type: 'question_answering', difficulty: 'medium', matcher_type: 'judge', matcher_config: '{}' });
         const data = await getDatasetItems(expanded);
         setItems(data);
         await load();
@@ -84,8 +95,12 @@ export default function Datasets() {
                                 <label htmlFor="ds-desc">Description</label>
                                 <input id="ds-desc" value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} placeholder="Brief description" />
                             </div>
+                            <div className="form-field">
+                                <label htmlFor="ds-tags">Tags JSON</label>
+                                <input id="ds-tags" value={form.tags} onChange={e => setForm({ ...form, tags: e.target.value })} placeholder='["logic","qa"]' />
+                            </div>
                         </div>
-                        <button type="submit" className="btn btn-primary" id="btn-create-dataset">➕ Create Dataset</button>
+                        <button type="submit" className="btn btn-primary" id="btn-create-dataset">Create Dataset</button>
                     </form>
                 </div>
 
@@ -114,11 +129,29 @@ export default function Datasets() {
                             </div>
                         </div>
                         <button type="submit" className="btn btn-primary" disabled={uploading || !uploadFile} style={{ marginTop: '0.5rem' }}>
-                            {uploading ? '⏳ Uploading...' : '⬆️ Upload Dataset'}
+                            {uploading ? 'Uploading...' : 'Upload Dataset'}
                         </button>
                     </form>
                 </div>
             </div>
+
+            {benchmarkSuites.length > 0 && (
+                <div className="card section animate-in">
+                    <div className="chart-title">Curated Benchmark Packs</div>
+                    <div className="compare-grid">
+                        {benchmarkSuites.map(suite => (
+                            <div key={suite.id} className="details-panel" style={{ marginTop: 0 }}>
+                                <div style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{suite.name}</div>
+                                <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '8px 0' }}>{suite.description}</p>
+                                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+                                    {suite.tags.map(tag => <span key={tag} className="badge badge-running">{tag}</span>)}
+                                </div>
+                                <button className="btn btn-outline btn-sm" onClick={() => handleCreateSuite(suite.id)}>Create Dataset</button>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Dataset List */}
             {datasets.length === 0 ? (
@@ -133,9 +166,10 @@ export default function Datasets() {
                     <div key={d.id} className="card section animate-in" style={{ cursor: 'pointer' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }} onClick={() => handleExpand(d.id)}>
                             <div>
-                                <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.95rem' }}>📁 {d.name}</div>
+                                <div style={{ fontWeight: 600, color: 'var(--text-primary)', fontSize: '0.95rem' }}>{d.name}</div>
                                 <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>
-                                    {d.description || 'No description'} • {d.item_count} items
+                                    {d.description || 'No description'} • {d.item_count} items • schema v{d.schema_version || 1}
+                                    {d.benchmark_suite && ` • suite: ${d.benchmark_suite}`}
                                 </div>
                             </div>
                             <div style={{ display: 'flex', gap: 8 }}>
@@ -179,6 +213,21 @@ export default function Datasets() {
                                                 <option value="hard">Hard</option>
                                             </select>
                                         </div>
+                                        <div className="form-field">
+                                            <label>Matcher</label>
+                                            <select value={itemForm.matcher_type} onChange={e => setItemForm({ ...itemForm, matcher_type: e.target.value })}>
+                                                <option value="judge">Judge Only</option>
+                                                <option value="exact">Exact</option>
+                                                <option value="contains">Contains</option>
+                                                <option value="regex">Regex</option>
+                                                <option value="numeric_tolerance">Numeric Tolerance</option>
+                                                <option value="semantic_similarity">Semantic Similarity</option>
+                                            </select>
+                                        </div>
+                                        <div className="form-field">
+                                            <label>Matcher Config JSON</label>
+                                            <input value={itemForm.matcher_config} onChange={e => setItemForm({ ...itemForm, matcher_config: e.target.value })} placeholder='{"tolerance":0}' />
+                                        </div>
                                         <div className="form-field" style={{ display: 'flex', alignItems: 'flex-end' }}>
                                             <button type="submit" className="btn btn-primary btn-sm">Add Item</button>
                                         </div>
@@ -196,6 +245,7 @@ export default function Datasets() {
                                                     <th>Expected Output</th>
                                                     <th>Type</th>
                                                     <th>Difficulty</th>
+                                                    <th>Matcher</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -206,6 +256,7 @@ export default function Datasets() {
                                                         <td style={{ maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.expected_output}</td>
                                                         <td><span className="badge badge-completed">{item.evaluation_type}</span></td>
                                                         <td>{item.difficulty}</td>
+                                                        <td>{item.matcher_type || 'judge'}</td>
                                                     </tr>
                                                 ))}
                                             </tbody>
