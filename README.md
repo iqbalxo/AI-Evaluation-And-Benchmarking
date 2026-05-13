@@ -82,6 +82,11 @@ Note: The verification dataset intentionally contains simple factual prompts to 
 
 ![Dashboard Screenshot](dashboard.png)
 
+## Architecture And Case Study
+
+- [Architecture](docs/ARCHITECTURE.md)
+- [Case Study: Cost-Aware LLM Evaluation](docs/CASE_STUDY.md)
+
 ## Judge Pipeline & Resilience
 
 The platform uses an **LLM-as-a-judge** pattern (via OpenRouter) to evaluate model outputs. To handle upstream instability (rate limits, context windows, 502s), the judge pipeline includes several resilience mechanisms:
@@ -133,11 +138,54 @@ npm run dev
 
 Open the AI Systems page and choose one of the balanced OpenRouter presets. The default preset is `openai/gpt-4o-mini`; custom OpenRouter model IDs are still supported for advanced comparisons.
 
+## One-Command Local Startup
+
+After creating `.env` from `.env.example`, you can run the full stack with Docker:
+
+```bash
+docker compose up --build
+```
+
+Backend API: `http://localhost:8000`  
+Frontend app: `http://localhost:5173`
+
+## Demo Script
+
+Seed a portfolio-ready demo dataset and two balanced OpenRouter systems:
+
+```bash
+cd backend
+python demo_seed.py
+python -m uvicorn main:app --reload --port 8000
+```
+
+Then open the frontend, run the seeded benchmark against both systems, create an experiment, and use the Experiments page to show leaderboard, CSV/JSON export, regression report, and blind pairwise judging.
+
 ## OpenRouter Model Presets
 
 The backend exposes the model catalog at `GET /api/systems/model-presets`. The Systems UI uses this endpoint to populate balanced, premium, budget, and free model choices with provider, tier, and cost hints.
 
 The LLM judge now uses `OPENROUTER_JUDGE_MODEL` instead of the previous free model fallback. If the OpenRouter call fails or no key is available, the local heuristic judge still keeps evaluations from crashing.
+
+## Portfolio-Grade Evaluation Features
+
+- Rubric-based LLM judging with configurable rubrics for general quality, hallucination focus, and instruction following.
+- Per-run judge metadata, trace IDs, deterministic model config, progress tracking, and cancellation.
+- Answer matchers for exact, contains, regex, numeric tolerance, semantic-similarity, and judge-only scoring.
+- Curated benchmark suites for reasoning, hallucination traps, and instruction following.
+- Experiment exports, model leaderboard, regression reports, and blind pairwise comparison.
+
+## Case Study: Cost-Aware Model Selection
+
+This project is designed to support a concise AI Engineer portfolio story:
+
+1. Choose a benchmark suite such as `reasoning_smoke` or `hallucination_traps`.
+2. Run the same dataset against `openai/gpt-4o-mini`, `google/gemini-1.5-flash`, and one open-weight model.
+3. Compare accuracy, hallucination rate, p95-style latency signals, token usage, and cost-per-correct-answer.
+4. Inspect traces where the judge disagrees with deterministic matchers.
+5. Use the regression report to decide whether a cheaper or newer model is safe to promote.
+
+The key employer signal is not only that the app calls LLMs, but that it treats model evaluation as a measurable engineering workflow.
 
 ## Validation Suite
 
@@ -150,6 +198,12 @@ python test_judge.py
 
 # Run the isolated fallback judge suite
 python test_judge.py --fallback-only
+
+# Run API tests
+python -m pytest tests
+
+# Compile backend files
+python quality.py
 ```
 ## Future Improvements
 
